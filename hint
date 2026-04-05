@@ -1,0 +1,8 @@
+Удаление старой базы и инициация новой
+del data\cars.db
+py -m database.init_db
+
+Запуск сервера
+py -m streamlit run app.py
+
+
