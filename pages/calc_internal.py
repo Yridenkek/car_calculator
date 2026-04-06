@@ -203,7 +203,8 @@ with col1:
     is_loyaltradein = False
     if is_tradein:
         is_loyaltradein = st.checkbox("⭐ Лояльный")
-# Вторая колонка (если видима)
+
+        
 if st.session_state.show_col2 and col2 is not None:
     with col2:
         st.markdown('<div class="section-header">📊 Расчет маржи</div>', unsafe_allow_html=True)
