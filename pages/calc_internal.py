@@ -168,13 +168,6 @@ def get_car_data(brand, model, year, trim):
         }
     return None
 
-# Боковая панель с настройками
-with st.sidebar:
-    st.subheader("⚙️ Настройки")
-    st.session_state.show_col2 = st.checkbox("📊 Показать расчет по авто", value=st.session_state.show_col2)
-    st.markdown("---")
-
-# Создание колонок в зависимости от видимости
 if st.session_state.show_col2:
     col1, col2, col3 = st.columns([1, 1, 2])
 else:
