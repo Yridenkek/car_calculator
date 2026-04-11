@@ -1,4 +1,4 @@
- # database/db_manager.py
+# database/db_manager.py
 import sqlite3
 from pathlib import Path
 import streamlit as st
@@ -7,11 +7,9 @@ DB_PATH = Path("data/cars.db")
 
 def get_connection():
     """Возвращает подключение к базе данных"""
-    # Убеждаемся, что папка data существует
     DB_PATH.parent.mkdir(exist_ok=True)
-    
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Чтобы результаты были как словари
+    conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
@@ -19,7 +17,6 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Таблица автомобилей
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,12 +32,10 @@ def init_db():
             loyaltradein INTEGER NOT NULL           
         )
     """)
-        
     conn.commit()
     conn.close()
 
 def get_brands():
-    """Возвращает список всех марок"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT brand FROM cars ORDER BY brand")
@@ -49,7 +44,6 @@ def get_brands():
     return brands
 
 def get_models(brand):
-    """Возвращает модели для выбранной марки"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT model FROM cars WHERE brand = ? ORDER BY model", (brand,))
@@ -58,7 +52,6 @@ def get_models(brand):
     return models
 
 def get_years(brand, model):
-    """Возвращает доступные годы для марки и модели"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT year FROM cars WHERE brand = ? AND model = ? ORDER BY year DESC", (brand, model))
@@ -67,7 +60,6 @@ def get_years(brand, model):
     return years
 
 def get_trims(brand, model, year):
-    """Возвращает комплектации для выбранной марки, модели и года"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT trim FROM cars WHERE brand = ? AND model = ? AND year = ?", (brand, model, year))
@@ -76,20 +68,22 @@ def get_trims(brand, model, year):
     return trims
 
 def get_price(brand, model, year, trim):
-    """Возвращает цену для выбранной конфигурации"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT price FROM cars WHERE brand = ? AND model = ? AND year = ? AND trim = ?", (brand, model, year, trim))
     result = cursor.fetchone()
     conn.close()
     return result[0] if result else 0
-# Кредитные ставки
-def init_rates_table():
-    """Создает таблицу кредитных ставок"""
+
+
+# ========== КРЕДИТНЫЕ СТАВКИ GEELY ==========
+
+def init_rates_table_geely():
+    """Создает таблицу кредитных ставок Geely"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS credit_rates (
+        CREATE TABLE IF NOT EXISTS credit_rates_geely (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pervak INTEGER NOT NULL,
             rate12 REAL NOT NULL,
@@ -99,22 +93,18 @@ def init_rates_table():
             rate60 REAL NOT NULL,
             rate72 REAL NOT NULL,
             rate84 REAL NOT NULL,
-            rate96 REAL NOT NULL
+            rate96 REAL NOT NULL,
+            rate108 REAL NOT NULL,
+            rate120 REAL NOT NULL
         )
     """)
     conn.commit()
     conn.close()
 
-def get_credit_rate(pervak, term_months):
-    """
-    Получает ставку по первоначальному взносу и сроку
-    pervak - первоначальный взнос в процентах (0, 10, 20...)
-    term_months - срок в месяцах (12, 24, 36...)
-    """
+def get_credit_rate_geely(pervak, term_months):
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Выбираем нужную колонку в зависимости от срока
     if term_months == 12:
         column = "rate12"
     elif term_months == 24:
@@ -131,12 +121,16 @@ def get_credit_rate(pervak, term_months):
         column = "rate84"
     elif term_months == 96:
         column = "rate96"
+    elif term_months == 108:
+        column = "rate108"
+    elif term_months == 120:
+        column = "rate120"
     else:
         conn.close()
         return None
     
     cursor.execute(f"""
-        SELECT {column} FROM credit_rates 
+        SELECT {column} FROM credit_rates_geely
         WHERE pervak = ?
     """, (pervak,))
     
@@ -144,27 +138,113 @@ def get_credit_rate(pervak, term_months):
     conn.close()
     return result[0] if result else None
 
-# Дополнительные удобные функции
-def get_rate12(pervak):
-    return get_credit_rate(pervak, 12)
 
-def get_rate24(pervak):
-    return get_credit_rate(pervak, 24)
+# ========== КРЕДИТНЫЕ СТАВКИ HAVAL ==========
 
-def get_rate36(pervak):
-    return get_credit_rate(pervak, 36)
+def init_rates_table_haval():
+    """Создает таблицу кредитных ставок Haval"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS credit_rates_haval (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pervak INTEGER NOT NULL,
+            rate12 REAL NOT NULL,
+            rate24 REAL NOT NULL,
+            rate36 REAL NOT NULL,
+            rate48 REAL NOT NULL,
+            rate60 REAL NOT NULL,
+            rate72 REAL NOT NULL,
+            rate84 REAL NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-def get_rate48(pervak):
-    return get_credit_rate(pervak, 48)
+def get_credit_rate_haval(pervak, term_months):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    if term_months == 12:
+        column = "rate12"
+    elif term_months == 24:
+        column = "rate24"
+    elif term_months == 36:
+        column = "rate36"
+    elif term_months == 48:
+        column = "rate48"
+    elif term_months == 60:
+        column = "rate60"
+    elif term_months == 72:
+        column = "rate72"
+    elif term_months == 84:
+        column = "rate84"
+    else:
+        conn.close()
+        return None
+    
+    cursor.execute(f"""
+        SELECT {column} FROM credit_rates_haval
+        WHERE pervak = ?
+    """, (pervak,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
 
-def get_rate60(pervak):
-    return get_credit_rate(pervak, 60)
 
-def get_rate72(pervak):
-    return get_credit_rate(pervak, 72)
+# ========== КРЕДИТНЫЕ СТАВКИ KNEWSTAR ==========
 
-def get_rate84(pervak):
-    return get_credit_rate(pervak, 84)
+def init_rates_table_knewstar():
+    """Создает таблицу кредитных ставок Knewstar"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS credit_rates_knewstar (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pervak INTEGER NOT NULL,
+            rate12 REAL NOT NULL,
+            rate24 REAL NOT NULL,
+            rate36 REAL NOT NULL,
+            rate48 REAL NOT NULL,
+            rate60 REAL NOT NULL,
+            rate72 REAL NOT NULL,
+            rate84 REAL NOT NULL,
+            rate96 REAL NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-def get_rate96(pervak):
-    return get_credit_rate(pervak, 96)
+def get_credit_rate_knewstar(pervak, term_months):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    if term_months == 12:
+        column = "rate12"
+    elif term_months == 24:
+        column = "rate24"
+    elif term_months == 36:
+        column = "rate36"
+    elif term_months == 48:
+        column = "rate48"
+    elif term_months == 60:
+        column = "rate60"
+    elif term_months == 72:
+        column = "rate72"
+    elif term_months == 84:
+        column = "rate84"
+    elif term_months == 96:
+        column = "rate96"        
+    else:
+        conn.close()
+        return None
+    
+    cursor.execute(f"""
+        SELECT {column} FROM credit_rates_knewstar
+        WHERE pervak = ?
+    """, (pervak,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None

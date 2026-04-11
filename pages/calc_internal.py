@@ -204,7 +204,7 @@ with col1:
     if is_tradein:
         is_loyaltradein = st.checkbox("⭐ Лояльный")
 
-        
+
 if st.session_state.show_col2 and col2 is not None:
     with col2:
         st.markdown('<div class="section-header">📊 Расчет маржи</div>', unsafe_allow_html=True)
@@ -307,7 +307,6 @@ if st.session_state.show_col2 and col2 is not None:
         else:
             st.info("👈 Выберите автомобиль")
 
-# Третья колонка (всегда видима)
 with col3:
     st.markdown('<div class="section-header">💳 Кредитный калькулятор</div>', unsafe_allow_html=True)
     
@@ -321,7 +320,8 @@ with col3:
         
         st.markdown(f"""
             <div class="info-block">
-                <span style="font-size:0.8rem;">Каско(170 000)</span>
+                💰 <strong>Тело кредита:</strong> {credit_body:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Цена - скидки + допы + каско(170 000)</span>
             </div>
         """, unsafe_allow_html=True)
     else:
@@ -352,8 +352,10 @@ with col3:
             st.metric("💵 Взнос в рублях", f"{downpayment_rub:,.0f} ₽")
         with col_loan:
             st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
-                
-        # Сохраняем предыдущее значение
+        
+        st.caption(f"📌 Ваш взнос: {downpayment_percent}% → ставки для {percent_rounded}% (округлено в меньшую сторону)")
+        
+        # Сохраняем предыдущее значение процента
         if 'prev_percent' not in st.session_state:
             st.session_state.prev_percent = downpayment_percent
         
@@ -361,46 +363,59 @@ with col3:
             st.session_state.prev_percent = downpayment_percent
             st.session_state.show_credit = False
         
-        # Кнопка расчета
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # ========== КНОПКА РАСЧЕТА ==========
         if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
             if loan_amount > 0:
                 st.session_state.show_credit = True
                 st.session_state.saved_loan_amount = loan_amount
                 st.session_state.saved_percent_rounded = percent_rounded
+                st.session_state.saved_brand = brand
             else:
                 st.success("✅ Кредит не требуется")
         
-        # Результаты
+        # ========== РЕЗУЛЬТАТЫ (ПОСЛЕ КНОПКИ) ==========
         if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
-            from database.db_manager import get_credit_rate
             
-            st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="section-header">📊 Ставки и платежи</div>', unsafe_allow_html=True)
+            from database.db_manager import (
+                get_credit_rate_geely, 
+                get_credit_rate_haval, 
+                get_credit_rate_knewstar
+            )
+            import pandas as pd
             
-            terms = [
-                (12, "1 год"),
-                (24, "2 года"),
-                (36, "3 года"),
-                (48, "4 года"),
-                (60, "5 лет"),
-                (72, "6 лет"),
-                (84, "7 лет"),
-                (96, "8 лет"),
-            ]
+            saved_brand = st.session_state.get('saved_brand', '')
             
-            col_rates, col_payments = st.columns(2)
+            if saved_brand == "Geely":
+                get_credit_rate = get_credit_rate_geely
+                terms = [
+                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
+                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"),
+                    (84, "7 лет"), (96, "8 лет"), (108, "9 лет"), (120, "10 лет"),
+                ]
+            elif saved_brand == "Haval":
+                get_credit_rate = get_credit_rate_haval
+                terms = [
+                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
+                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"), (84, "7 лет"),
+                ]
+            elif saved_brand == "Knewstar":
+                get_credit_rate = get_credit_rate_knewstar
+                terms = [
+                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
+                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"),
+                    (84, "7 лет"), (96, "8 лет"),
+                ]
+            else:
+                get_credit_rate = None
+                terms = []
             
-            with col_rates:
-                st.markdown("**📉 Процентная ставка**")
-                for months, label in terms:
-                    rate = get_credit_rate(st.session_state.saved_percent_rounded, months)
-                    if rate:
-                        st.markdown(f"<div style='margin: 5px 0;'>{label}: <strong>{rate}%</strong></div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<div style='margin: 5px 0;'>{label}: —</div>", unsafe_allow_html=True)
-            
-            with col_payments:
-                st.markdown("**💸 Ежемесячный платеж**")
+            if get_credit_rate and terms:
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+                st.markdown('<div class="section-header">📊 Ставки и платежи</div>', unsafe_allow_html=True)
+                
+                data = []
                 for months, label in terms:
                     rate = get_credit_rate(st.session_state.saved_percent_rounded, months)
                     if rate and st.session_state.saved_loan_amount > 0:
@@ -409,9 +424,12 @@ with col3:
                             payment = st.session_state.saved_loan_amount * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)
                         else:
                             payment = st.session_state.saved_loan_amount / months
-                        st.markdown(f"<div style='margin: 5px 0;'>{label}: <strong>{payment:,.0f} ₽</strong></div>", unsafe_allow_html=True)
+                        data.append({"Срок": label, "Ставка": f"{rate:.2f}%", "Платеж в месяц": f"{payment:,.0f} ₽"})
                     else:
-                        st.markdown(f"<div style='margin: 5px 0;'>{label}: —</div>", unsafe_allow_html=True)
+                        data.append({"Срок": label, "Ставка": "—", "Платеж в месяц": "—"})
+                
+                df = pd.DataFrame(data)
+                st.dataframe(df, use_container_width=True, hide_index=True)
         
         elif st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) <= 0:
             st.success("✅ Кредит не требуется")
