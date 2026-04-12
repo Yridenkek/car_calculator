@@ -340,7 +340,7 @@ with col3:
             min_value=0,
             max_value=100,
             value=20,
-            step=10
+            step=1
         )
         
         percent_rounded = (downpayment_percent // 10) * 10
