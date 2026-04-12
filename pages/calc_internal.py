@@ -354,9 +354,7 @@ with col3:
             st.metric("💵 Взнос в рублях", f"{downpayment_rub:,.0f} ₽")
         with col_loan:
             st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
-        
-        st.caption(f"📌 Ваш взнос: {downpayment_percent}% → ставки для {percent_rounded}% (округлено в меньшую сторону)")
-        
+                
         if 'prev_percent' not in st.session_state:
             st.session_state.prev_percent = downpayment_percent
         
