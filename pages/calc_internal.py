@@ -239,7 +239,6 @@ if st.session_state.show_col2 and col2 is not None:
                 joc = dopoborud + markup + insurance_value
                 kum = joc + tradein_value
                 
-                # Итоговая маржа - крупно
                 st.markdown(f"""
                     <div class="total-margin">
                         <div class="label">КУМ</div>
@@ -316,12 +315,16 @@ with col3:
         if is_tradein:
             discount_sum += car_data['loyaltradein'] if is_loyaltradein else car_data['tradein']
         
-        credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + 170000)
-        
+
+        kasko = 130000 if brand == "Haval" else 170000
+        credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
+        carprice = credit_body - order_price - kasko      
         st.markdown(f"""
-            <div class="info-block">
-                💰 <strong>Тело кредита:</strong> {credit_body:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Цена - скидки + допы + каско(170 000)</span>
+               <div class="info-block">
+                 Цена автомобиля: {carprice:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Цена доп оборудования</span> {order_price:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Цена каско(170 000)</span> {kasko:,.0f} ₽
+
             </div>
         """, unsafe_allow_html=True)
     else:
@@ -337,10 +340,9 @@ with col3:
             min_value=0,
             max_value=100,
             value=20,
-            step=1
+            step=10
         )
         
-        # Округление в меньшую сторону
         percent_rounded = (downpayment_percent // 10) * 10
         percent_rounded = min(percent_rounded, 80)
         
@@ -355,7 +357,6 @@ with col3:
         
         st.caption(f"📌 Ваш взнос: {downpayment_percent}% → ставки для {percent_rounded}% (округлено в меньшую сторону)")
         
-        # Сохраняем предыдущее значение процента
         if 'prev_percent' not in st.session_state:
             st.session_state.prev_percent = downpayment_percent
         
@@ -365,7 +366,6 @@ with col3:
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # ========== КНОПКА РАСЧЕТА ==========
         if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
             if loan_amount > 0:
                 st.session_state.show_credit = True
@@ -375,7 +375,6 @@ with col3:
             else:
                 st.success("✅ Кредит не требуется")
         
-        # ========== РЕЗУЛЬТАТЫ (ПОСЛЕ КНОПКИ) ==========
         if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
             
             from database.db_manager import (

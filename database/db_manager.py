@@ -210,7 +210,10 @@ def init_rates_table_knewstar():
             rate60 REAL NOT NULL,
             rate72 REAL NOT NULL,
             rate84 REAL NOT NULL,
-            rate96 REAL NOT NULL
+            rate96 REAL NOT NULL,
+            rate108 REAL NOT NULL,
+            rate120 REAL NOT NULL
+       
         )
     """)
     conn.commit()
@@ -235,7 +238,12 @@ def get_credit_rate_knewstar(pervak, term_months):
     elif term_months == 84:
         column = "rate84"
     elif term_months == 96:
-        column = "rate96"        
+        column = "rate96"   
+    elif term_months == 108:
+        column = "rate108"        
+    elif term_months == 120:
+        column = "rate120"        
+
     else:
         conn.close()
         return None
