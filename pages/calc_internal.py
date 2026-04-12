@@ -175,7 +175,7 @@ else:
     col2 = None
 
 with col1:
-    st.markdown('<div class="section-header">📋 Выбор автомобиля</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📋 Автомобиль</div>', unsafe_allow_html=True)
     
     brands = get_brands()
     brand = st.selectbox("Марка", brands, key="brand")
@@ -190,14 +190,16 @@ with col1:
     trim = st.selectbox("Комплектация", trims, key="trim")
     
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-header">💰 Дополнительно</div>', unsafe_allow_html=True)
     
+
     order_price = st.number_input("Допы (заказ-наряд)", min_value=0, step=10000, value=0)
     manual_discount = st.number_input("Скидка от ДЦ", min_value=0, step=5000, value=0)
+    pereliv = st.number_input("Перелив в допы", min_value=0, step=10000, value=0)
+
     
     st.markdown('<div class="section-header">✅ Условия покупки</div>', unsafe_allow_html=True)
     
-    is_credit = st.checkbox("💳 Кредит")
+    is_credit = st.checkbox("💳 Кредит ") 
     is_tradein = st.checkbox("🔄 Trade-in")
     
     is_loyaltradein = False
@@ -207,13 +209,13 @@ with col1:
 
 if st.session_state.show_col2 and col2 is not None:
     with col2:
-        st.markdown('<div class="section-header">📊 Расчет маржи</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">📊 Расчет КМ</div>', unsafe_allow_html=True)
         
         if brand and model and year and trim:
             car_data = get_car_data(brand, model, year, trim)
             
             if car_data:
-                markup = car_data['retailprice'] - car_data['price'] - manual_discount
+                markup = car_data['retailprice'] - car_data['price'] - manual_discount - pereliv
                 if is_loyaltradein:
                     markup -= 30000
                 
@@ -232,7 +234,7 @@ if st.session_state.show_col2 and col2 is not None:
                     else:
                         vozm += car_data['tradein']
                 
-                dopoborud = order_price / 2
+                dopoborud = (order_price / 2) + pereliv
                 insurance_value = 80000 if is_credit else 0
                 tradein_value = 100000 if is_tradein else 0
                 
@@ -306,24 +308,26 @@ if st.session_state.show_col2 and col2 is not None:
         else:
             st.info("👈 Выберите автомобиль")
 
+
+
 with col3:
     st.markdown('<div class="section-header">💳 Кредитный калькулятор</div>', unsafe_allow_html=True)
     
     # Тело кредита
     if car_data:
-        discount_sum = car_data['pryamaya']
+        discount_sum = car_data['pryamaya'] + manual_discount
         if is_tradein:
             discount_sum += car_data['loyaltradein'] if is_loyaltradein else car_data['tradein']
         
-
         kasko = 130000 if brand == "Haval" else 170000
         credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
-        carprice = credit_body - order_price - kasko      
+        carprice = credit_body - order_price - kasko - pereliv
+        order_price += pereliv
         st.markdown(f"""
                <div class="info-block">
                  Цена автомобиля: {carprice:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Цена доп оборудования</span> {order_price:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Цена каско(170 000)</span> {kasko:,.0f} ₽
+                <span style="font-size:0.8rem;">Доп оборудование</span> {order_price:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
 
             </div>
         """, unsafe_allow_html=True)
@@ -346,7 +350,7 @@ with col3:
         percent_rounded = (downpayment_percent // 10) * 10
         percent_rounded = min(percent_rounded, 80)
         
-        downpayment_rub = int(credit_body * downpayment_percent / 100) if credit_body > 0 else 0
+        downpayment_rub = int(carprice * downpayment_percent / 100) if credit_body > 0 else 0
         loan_amount = max(0, credit_body - downpayment_rub)
         
         col_rub, col_loan = st.columns(2)
