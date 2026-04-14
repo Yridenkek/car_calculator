@@ -10,7 +10,7 @@ def fill_sample_data():
     
     total_cars = [
         ("Geely", "Monjaro", 2025, "Flagship SE", 4899990, 4579990,40000, 0, 200000, 250000),
-        ("Geely", "Monjaro", 2026, "Luxury SE", 4379990, 4579990, 0, 0, 200000, 250000),
+        ("Geely", "Monjaro", 2026, "Luxury SE", 4599990, 4379990, 0, 0, 200000, 250000),
         ("Geely", "Monjaro", 2026, "Flagship SE", 4899990, 4579990, 0, 0, 0, 0),
         ("Geely", "Atlas", 2025, "Luxury 2WD", 3449990, 3289990, 0, 0, 260000, 0),
         ("Geely", "Atlas", 2025, "Luxury", 3760990, 1, 0, 0, 150000, 0),
