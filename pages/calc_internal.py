@@ -324,50 +324,92 @@ with col3:
         carprice = credit_body - order_price - kasko - pereliv
         order_price += pereliv
         st.markdown(f"""
-               <div class="info-block">
-                 Цена автомобиля: {carprice:,.0f} ₽<br>
+            <div class="info-block">
+                Цена автомобиля: {carprice:,.0f} ₽<br>
                 <span style="font-size:0.8rem;">Доп оборудование</span> {order_price:,.0f} ₽<br>
                 <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
-
             </div>
         """, unsafe_allow_html=True)
     else:
         credit_body = 0
+        carprice = 0
         st.info("👈 Выберите автомобиль для расчета кредита")
     
-    if credit_body > 0:
+    if credit_body > 0 and carprice > 0:
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # Ползунок
-        downpayment_percent = st.slider(
-            "🎯 Первоначальный взнос (%)",
-            min_value=0,
-            max_value=100,
-            value=20,
-            step=1
-        )
+        # Инициализация состояния
+        if 'down_rub' not in st.session_state:
+            st.session_state.down_rub = str(int(carprice * 0.2))
+        if 'down_percent' not in st.session_state:
+            st.session_state.down_percent = "20.0"
         
-        percent_rounded = (downpayment_percent // 10) * 10
+        # Две колонки для ввода
+        col_rub, col_percent = st.columns([2, 1])
+        
+        with col_rub:
+            st.markdown("**💵 Первоначальный взнос (₽)**")
+            rub_input = st.text_input(
+                "",
+                value=st.session_state.down_rub,
+                label_visibility="collapsed",
+                placeholder="Сумма в рублях"
+            )
+            try:
+               rub_value = max(0, min(int(carprice), int(rub_input))) if rub_input else 0
+            except:
+               rub_value = 0       
+        
+        with col_percent:
+            st.markdown("**%**")
+            percent_input = st.text_input(
+            "",
+                value=st.session_state.down_percent,
+                label_visibility="collapsed",
+                placeholder="Процент"
+            )
+        try:
+            percent_value = max(0.0, min(100.0, float(percent_input))) if percent_input else 0.0
+        except:
+            percent_value = 0.0
+        
+        # Синхронизация: если изменился процент
+        if percent_input != st.session_state.down_percent:
+            st.session_state.down_percent = percent_input
+            st.session_state.down_rub = str(int((percent_value / 100) * carprice))
+            st.rerun()
+        
+        # Синхронизация: если изменились рубли
+        elif rub_input != st.session_state.down_rub:
+            st.session_state.down_rub = rub_input
+            new_percent = (rub_value / carprice) * 100 if carprice > 0 else 0
+            st.session_state.down_percent = f"{new_percent:.1f}"
+            st.rerun()
+        
+        # Используем значения
+        current_rub = rub_value
+        loan_amount = max(0, credit_body - current_rub)
+        
+        # Сумма кредита
+        st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
+        
+        # Округление для ставок
+        current_percent = percent_value
+        percent_rounded = (int(current_percent) // 10) * 10
         percent_rounded = min(percent_rounded, 80)
         
-        downpayment_rub = int(carprice * downpayment_percent / 100) if credit_body > 0 else 0
-        loan_amount = max(0, credit_body - downpayment_rub)
+        st.caption(f"📌 Ваш взнос: {current_percent:.1f}% → ставки для {percent_rounded}% (округлено в меньшую сторону)")
         
-        col_rub, col_loan = st.columns(2)
-        with col_rub:
-            st.metric("💵 Взнос в рублях", f"{downpayment_rub:,.0f} ₽")
-        with col_loan:
-            st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
-                
         if 'prev_percent' not in st.session_state:
-            st.session_state.prev_percent = downpayment_percent
+            st.session_state.prev_percent = current_percent
         
-        if downpayment_percent != st.session_state.prev_percent:
-            st.session_state.prev_percent = downpayment_percent
+        if current_percent != st.session_state.prev_percent:
+            st.session_state.prev_percent = current_percent
             st.session_state.show_credit = False
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
+        # Кнопка расчета
         if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
             if loan_amount > 0:
                 st.session_state.show_credit = True
@@ -377,6 +419,7 @@ with col3:
             else:
                 st.success("✅ Кредит не требуется")
         
+        # Результаты
         if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
             
             from database.db_manager import (
@@ -419,7 +462,7 @@ with col3:
                 data = []
                 for months, label in terms:
                     rate = get_credit_rate(st.session_state.saved_percent_rounded, months)
-                    if rate and st.session_state.saved_loan_amount > 0:
+                    if rate is not None and st.session_state.saved_loan_amount > 0:
                         monthly_rate = rate / 100 / 12
                         if monthly_rate > 0:
                             payment = st.session_state.saved_loan_amount * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)
