@@ -397,9 +397,7 @@ with col3:
         current_percent = percent_value
         percent_rounded = (int(current_percent) // 10) * 10
         percent_rounded = min(percent_rounded, 80)
-        
-        st.caption(f"📌 Ваш взнос: {current_percent:.1f}% → ставки для {percent_rounded}% (округлено в меньшую сторону)")
-        
+                
         if 'prev_percent' not in st.session_state:
             st.session_state.prev_percent = current_percent
         
