@@ -132,7 +132,7 @@ def get_models(brand):
 
 def get_years(brand, model):
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor()  
     cursor.execute("SELECT DISTINCT year FROM cars WHERE brand = ? AND model = ? ORDER BY year DESC", (brand, model))
     years = [row[0] for row in cursor.fetchall()]
     conn.close()
@@ -270,8 +270,8 @@ if st.session_state.show_col2 and col2 is not None:
                     
                     st.markdown(f"""
                         <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Возмещение</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{vozm:,.0f} ₽</div>
+                            <div style="font-size:0.8rem; color:#475569;">ФИН</div>
+                            <div style="font-size:1.2rem; font-weight:600;">{insurance_value:,.0f} ₽</div>
                         </div>
                     """, unsafe_allow_html=True)
                 
@@ -282,13 +282,15 @@ if st.session_state.show_col2 and col2 is not None:
                             <div style="font-size:1.2rem; font-weight:600;">{dopoborud:,.0f} ₽</div>
                         </div>
                     """, unsafe_allow_html=True)
-                    
+
                     st.markdown(f"""
                         <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">ФИН</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{insurance_value:,.0f} ₽</div>
+                            <div style="font-size:0.8rem; color:#475569;">Возмещение</div>
+                            <div style="font-size:1.2rem; font-weight:600;">{vozm:,.0f} ₽</div>
                         </div>
                     """, unsafe_allow_html=True)
+
+
                     
                     st.markdown(f"""
                         <div class="accent-metric">
@@ -313,7 +315,7 @@ if st.session_state.show_col2 and col2 is not None:
 with col3:
     st.markdown('<div class="section-header">💳 Кредитный калькулятор</div>', unsafe_allow_html=True)
     
-    # Тело кредита
+    # ---- Вычисление тела кредита (без изменений) ----
     if car_data:
         discount_sum = car_data['pryamaya'] + manual_discount
         if is_tradein:
@@ -326,8 +328,8 @@ with col3:
         
         st.markdown(f"""
             <div class="info-block">
-                Цена автомобиля: {carprice:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Доп оборудование</span> {order_price:,.0f} ₽<br>
+                Железо: {carprice:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Допы</span> {order_price:,.0f} ₽<br>
                 <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
             </div>
         """, unsafe_allow_html=True)
@@ -339,73 +341,77 @@ with col3:
     if credit_body > 0 and carprice > 0:
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-                # Инициализация и отслеживание изменения цены
-        if 'base_price' not in st.session_state:
-            st.session_state.base_price = carprice
-            st.session_state.down_rub = str(int(carprice * 0.2))
-            st.session_state.down_percent = "20.0"
-
-        if carprice != st.session_state.base_price:
-            st.session_state.base_price = carprice
-            try:
-                cur_percent = float(st.session_state.down_percent)
-            except:
-                cur_percent = 20.0
-            st.session_state.down_rub = str(int((cur_percent / 100) * carprice))
-            st.session_state.down_percent = f"{cur_percent:.1f}"
-            st.rerun()
-
-        # Две колонки для ввода (без изменений)
-        col_rub, col_percent = st.columns([2, 1])
+        # ---- Инициализация сессионных переменных ----
+        if 'carprice' not in st.session_state:
+            st.session_state.carprice = carprice
+        # Если сменился автомобиль – обновляем carprice и пересчитываем взносы
+        if st.session_state.carprice != carprice:
+            st.session_state.carprice = carprice
+            old_percent = st.session_state.get('down_percent', 20.0)
+            st.session_state.down_rub = int((old_percent / 100) * carprice)
+            st.session_state.down_percent = old_percent
         
-        with col_rub:
-            st.markdown("**💵 Первоначальный взнос (₽)**")
-            rub_input = st.text_input(
-                "",
-                value=st.session_state.down_rub,
+        # Если переменные взноса ещё не созданы – создаём
+        if 'down_rub' not in st.session_state:
+            st.session_state.down_rub = int(carprice * 0.2)
+        if 'down_percent' not in st.session_state:
+            st.session_state.down_percent = 20.0
+        
+        # ---- Функции синхронизации (on_change) ----
+        def sync_from_rub():
+            carprice = st.session_state.carprice
+            if carprice > 0:
+                rub = st.session_state.down_rub
+                st.session_state.down_percent = round((rub / carprice) * 100, 1)
+        
+        def sync_from_percent():
+            carprice = st.session_state.carprice
+            if carprice > 0:
+                percent = st.session_state.down_percent
+                st.session_state.down_rub = int((percent / 100) * carprice)
+        
+        # ---- Две колонки: левая (взносы), правая (тело кредита) ----
+        col_left, col_right = st.columns([1, 2])
+        
+        with col_left:
+            st.markdown("**💵 Первоначальный взнос**")
+            
+            # Поле ввода в рублях
+            st.number_input(
+                "₽ Сумма",
+                min_value=0,
+                max_value=carprice,
+                step=1000,
+                key="down_rub",
+                on_change=sync_from_rub,
                 label_visibility="collapsed",
                 placeholder="Сумма в рублях"
             )
-            try:
-                rub_value = max(0, min(int(carprice), int(rub_input))) if rub_input else 0
-            except:
-                rub_value = 0
-        
-        with col_percent:
-            st.markdown("**%**")
-            percent_input = st.text_input(
-                "",
-                value=st.session_state.down_percent,
+            
+            # Поле ввода в процентах
+            st.number_input(
+                "% от стоимости авто",
+                min_value=0.0,
+                max_value=100.0,
+                step=0.5,
+                key="down_percent",
+                on_change=sync_from_percent,
                 label_visibility="collapsed",
                 placeholder="Процент"
             )
-            try:
-                percent_value = max(0.0, min(100.0, float(percent_input))) if percent_input else 0.0
-            except:
-                percent_value = 0.0
         
-        # Синхронизация (как у вас, только используем st.session_state.base_price)
-        if rub_input != st.session_state.down_rub:
-            st.session_state.down_rub = rub_input
-            st.session_state.down_percent = str(round((rub_value / st.session_state.base_price) * 100, 1) if st.session_state.base_price > 0 else 0)
-            st.rerun()
+        with col_right:
+            # Берём актуальное значение из session_state
+            rub_value = st.session_state.down_rub
+            loan_amount = max(0, credit_body - rub_value)
+            st.metric("🏦 Тело кредита", f"{loan_amount:,.0f} ₽")
         
-        elif percent_input != st.session_state.down_percent:
-            st.session_state.down_percent = percent_input
-            st.session_state.down_rub = str(int((percent_value / 100) * st.session_state.base_price))
-            st.rerun()
-        
-        # Дальше идёт ваш код с metric, кнопкой и таблицей (без изменений)
-        # Используем значения
-        current_rub = rub_value
-        loan_amount = max(0, credit_body - current_rub)
-        
-        st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
-        
-        current_percent = percent_value
+        # ---- Далее идёт ваша существующая логика (кнопка, таблица) ----
+        # Небольшая адаптация: используем loan_amount, текущий процент
+        current_percent = st.session_state.down_percent
         percent_rounded = (int(current_percent) // 10) * 10
         percent_rounded = min(percent_rounded, 80)
-                
+        
         if 'prev_percent' not in st.session_state:
             st.session_state.prev_percent = current_percent
         
@@ -415,7 +421,7 @@ with col3:
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # Кнопка расчета
+        # Кнопка расчёта
         if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
             if loan_amount > 0:
                 st.session_state.show_credit = True
@@ -425,9 +431,8 @@ with col3:
             else:
                 st.success("✅ Кредит не требуется")
         
-        # Результаты
+        # Результаты (таблица ставок)
         if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
-            
             from database.db_manager import (
                 get_credit_rate_geely, 
                 get_credit_rate_haval, 
