@@ -323,6 +323,7 @@ with col3:
         credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
         carprice = credit_body - order_price - kasko - pereliv
         order_price += pereliv
+        
         st.markdown(f"""
             <div class="info-block">
                 Цена автомобиля: {carprice:,.0f} ₽<br>
@@ -338,13 +339,23 @@ with col3:
     if credit_body > 0 and carprice > 0:
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # Инициализация состояния
-        if 'down_rub' not in st.session_state:
+                # Инициализация и отслеживание изменения цены
+        if 'base_price' not in st.session_state:
+            st.session_state.base_price = carprice
             st.session_state.down_rub = str(int(carprice * 0.2))
-        if 'down_percent' not in st.session_state:
             st.session_state.down_percent = "20.0"
-        
-        # Две колонки для ввода
+
+        if carprice != st.session_state.base_price:
+            st.session_state.base_price = carprice
+            try:
+                cur_percent = float(st.session_state.down_percent)
+            except:
+                cur_percent = 20.0
+            st.session_state.down_rub = str(int((cur_percent / 100) * carprice))
+            st.session_state.down_percent = f"{cur_percent:.1f}"
+            st.rerun()
+
+        # Две колонки для ввода (без изменений)
         col_rub, col_percent = st.columns([2, 1])
         
         with col_rub:
@@ -356,44 +367,41 @@ with col3:
                 placeholder="Сумма в рублях"
             )
             try:
-               rub_value = max(0, min(int(carprice), int(rub_input))) if rub_input else 0
+                rub_value = max(0, min(int(carprice), int(rub_input))) if rub_input else 0
             except:
-               rub_value = 0       
+                rub_value = 0
         
         with col_percent:
             st.markdown("**%**")
             percent_input = st.text_input(
-            "",
+                "",
                 value=st.session_state.down_percent,
                 label_visibility="collapsed",
                 placeholder="Процент"
             )
-        try:
-            percent_value = max(0.0, min(100.0, float(percent_input))) if percent_input else 0.0
-        except:
-            percent_value = 0.0
+            try:
+                percent_value = max(0.0, min(100.0, float(percent_input))) if percent_input else 0.0
+            except:
+                percent_value = 0.0
         
-        # Синхронизация: если изменился процент
-        if percent_input != st.session_state.down_percent:
-            st.session_state.down_percent = percent_input
-            st.session_state.down_rub = str(int((percent_value / 100) * carprice))
-            st.rerun()
-        
-        # Синхронизация: если изменились рубли
-        elif rub_input != st.session_state.down_rub:
+        # Синхронизация (как у вас, только используем st.session_state.base_price)
+        if rub_input != st.session_state.down_rub:
             st.session_state.down_rub = rub_input
-            new_percent = (rub_value / carprice) * 100 if carprice > 0 else 0
-            st.session_state.down_percent = f"{new_percent:.1f}"
+            st.session_state.down_percent = str(round((rub_value / st.session_state.base_price) * 100, 1) if st.session_state.base_price > 0 else 0)
             st.rerun()
         
+        elif percent_input != st.session_state.down_percent:
+            st.session_state.down_percent = percent_input
+            st.session_state.down_rub = str(int((percent_value / 100) * st.session_state.base_price))
+            st.rerun()
+        
+        # Дальше идёт ваш код с metric, кнопкой и таблицей (без изменений)
         # Используем значения
         current_rub = rub_value
         loan_amount = max(0, credit_body - current_rub)
         
-        # Сумма кредита
         st.metric("🏦 Сумма кредита", f"{loan_amount:,.0f} ₽")
         
-        # Округление для ставок
         current_percent = percent_value
         percent_rounded = (int(current_percent) // 10) * 10
         percent_rounded = min(percent_rounded, 80)
