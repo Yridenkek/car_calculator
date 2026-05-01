@@ -191,21 +191,23 @@ with col1:
     
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
-
     order_price = st.number_input("Допы (заказ-наряд)", min_value=0, step=10000, value=0)
     manual_discount = st.number_input("Скидка от ДЦ", min_value=0, step=5000, value=0)
     pereliv = st.number_input("Перелив в допы", min_value=0, step=10000, value=0)
 
-    
+    car_data = get_car_data(brand, model, year, trim) if brand and model and year and trim else None
+
     st.markdown('<div class="section-header">✅ Условия покупки</div>', unsafe_allow_html=True)
     
-    is_credit = st.checkbox("💳 Кредит ") 
+    is_credit = st.checkbox("💳 Кредит") 
     is_tradein = st.checkbox("🔄 Trade-in")
     
     is_loyaltradein = False
     if is_tradein:
-        is_loyaltradein = st.checkbox("⭐ Лояльный")
-
+        if car_data and car_data.get('loyaltradein', 0) > 0:
+            is_loyaltradein = st.checkbox("Лояльный")
+        else:
+            st.info("Лояльный трейд-ин не доступен для этого автомобиля")
 
 if st.session_state.show_col2 and col2 is not None:
     with col2:
