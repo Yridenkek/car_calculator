@@ -168,6 +168,12 @@ def get_car_data(brand, model, year, trim):
         }
     return None
 
+def get_loyal_tooltip(model):
+    if model == "001":
+        return "Geely, Belgee, Knewstar, Changan, Haval, Tank, Great Wall, Chery, GAC, Omoda, Exeed, Jetour, Jaecoo, Kaiyi, Baic, Jac, Faw, Ora, Jetta, Wey, Livan, Lifan, Hongqi, Soueast, Lixiang, Skywell, Voyah, Lynk & Co, Zeekr, Aito, Avatr, BYD, Dongfeng, Oting, SWM, VGV, TENET, Nio, Denta, Foton"
+    else:
+        return "Volkswagen, Skoda, Toyota, Nissan, Renault, BMW, Mrscedes-Benz, Audi, Land Rover, Volvo, Geely, Belgee, Knewstar"
+
 if st.session_state.show_col2:
     col1, col2, col3 = st.columns([1, 1, 2])
 else:
@@ -205,10 +211,17 @@ with col1:
     is_loyaltradein = False
     if is_tradein:
         if car_data and car_data.get('loyaltradein', 0) > 0:
-            is_loyaltradein = st.checkbox("Лояльный")
+            col_chk, col_tip = st.columns([0.85, 0.15])
+            with col_chk:
+                is_loyaltradein = st.checkbox("Лояльный")
+            with col_tip:
+                tip_text = get_loyal_tooltip(model)
+                st.markdown(
+                    f'<span title="{tip_text}" style="cursor: help; font-size: 1.2rem;">❔</span>',
+                    unsafe_allow_html=True
+                )
         else:
             st.info("Лояльный трейд-ин не доступен для этого автомобиля")
-
 if st.session_state.show_col2 and col2 is not None:
     with col2:
         st.markdown('<div class="section-header">📊 Расчет КМ</div>', unsafe_allow_html=True)
@@ -221,7 +234,6 @@ if st.session_state.show_col2 and col2 is not None:
                 if is_loyaltradein:
                     markup -= 30000
                 
-                # Основной показатель - КУМ
                 total_discount = car_data['pryamaya'] + manual_discount
                 if is_tradein:
                     if is_loyaltradein:
@@ -252,7 +264,6 @@ if st.session_state.show_col2 and col2 is not None:
                 
                 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
                 
-                # Остальные показатели в 2 колонки
                 col_m1, col_m2 = st.columns(2)
                 
                 with col_m1:
@@ -317,7 +328,6 @@ if st.session_state.show_col2 and col2 is not None:
 with col3:
     st.markdown('<div class="section-header">💳 Кредитный калькулятор</div>', unsafe_allow_html=True)
     
-    # ---- Вычисление тела кредита (без изменений) ----
     if car_data:
         discount_sum = car_data['pryamaya'] + manual_discount
         if is_tradein:
@@ -343,23 +353,19 @@ with col3:
     if credit_body > 0 and carprice > 0:
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # ---- Инициализация сессионных переменных ----
         if 'carprice' not in st.session_state:
             st.session_state.carprice = carprice
-        # Если сменился автомобиль – обновляем carprice и пересчитываем взносы
         if st.session_state.carprice != carprice:
             st.session_state.carprice = carprice
             old_percent = st.session_state.get('down_percent', 20.0)
             st.session_state.down_rub = int((old_percent / 100) * carprice)
             st.session_state.down_percent = old_percent
         
-        # Если переменные взноса ещё не созданы – создаём
         if 'down_rub' not in st.session_state:
             st.session_state.down_rub = int(carprice * 0.2)
         if 'down_percent' not in st.session_state:
             st.session_state.down_percent = 20.0
         
-        # ---- Функции синхронизации (on_change) ----
         def sync_from_rub():
             carprice = st.session_state.carprice
             if carprice > 0:
@@ -372,13 +378,11 @@ with col3:
                 percent = st.session_state.down_percent
                 st.session_state.down_rub = int((percent / 100) * carprice)
         
-        # ---- Две колонки: левая (взносы), правая (тело кредита) ----
         col_left, col_right = st.columns([1, 2])
         
         with col_left:
             st.markdown("**💵 Первоначальный взнос**")
             
-            # Поле ввода в рублях
             st.number_input(
                 "₽ Сумма",
                 min_value=0,
@@ -390,7 +394,6 @@ with col3:
                 placeholder="Сумма в рублях"
             )
             
-            # Поле ввода в процентах
             st.number_input(
                 "% от стоимости авто",
                 min_value=0.0,
@@ -403,13 +406,10 @@ with col3:
             )
         
         with col_right:
-            # Берём актуальное значение из session_state
             rub_value = st.session_state.down_rub
             loan_amount = max(0, credit_body - rub_value)
             st.metric("🏦 Тело кредита", f"{loan_amount:,.0f} ₽")
         
-        # ---- Далее идёт ваша существующая логика (кнопка, таблица) ----
-        # Небольшая адаптация: используем loan_amount, текущий процент
         current_percent = st.session_state.down_percent
         percent_rounded = (int(current_percent) // 10) * 10
         percent_rounded = min(percent_rounded, 80)
@@ -423,7 +423,6 @@ with col3:
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         
-        # Кнопка расчёта
         if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
             if loan_amount > 0:
                 st.session_state.show_credit = True
@@ -433,7 +432,6 @@ with col3:
             else:
                 st.success("✅ Кредит не требуется")
         
-        # Результаты (таблица ставок)
         if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
             from database.db_manager import (
                 get_credit_rate_geely, 
