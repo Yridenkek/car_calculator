@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Расчётный лист</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 20px;
+            background: #f0f2f5;
+        }
+
+        table.iksweb {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table.iksweb, 
+        table.iksweb td, 
+        table.iksweb th {
+            border: 1px solid #595959;
+        }
+
+        table.iksweb td, 
+        table.iksweb th {
+            padding: 10px 8px;
+            vertical-align: top;
+        }
+
+        table.iksweb th {
+            background: #4e6982;
+            color: #fff;
+            font-weight: normal;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            table.iksweb {
+                width: 100%;
+                page-break-inside: avoid;
+            }
+            .no-print {
+                display: none;
+            }
+}
+
+    </style>
+</head>
+<body>
+
+<table class="iksweb">
+    <colgroup>
+        <col style="width: 15%">  
+        <col style="width: 30%">   
+        <col style="width: 35%">  
+        <col style="width: 20%">
+    </colgroup>
+
+    <tr>
+        <td><strong>Авто</strong></td>
+        <td colspan="3">{{brand}} {{model}} {{year}} {{trim}}  {{vin}}</td>
+    </tr>
+
+    <tr>
+        <td><strong>МЦП</strong></td>
+        <td colspan="3">{{mcp}}</td>
+    </tr>
+
+    <tr>
+        <td rowspan="5"><strong>Скидки</strong></td>
+        <td>Стимулирование продаж</td>
+        <td>{{pryamaya}}</td>
+        <td rowspan="5">{{total_discount}}</td>
+    </tr>
+    <tr>
+        <td>Лояльный трейд ин</td>
+        <td>{{loyaltd}}</td>
+    </tr>
+    <tr>
+        <td>Трейд ин другие бренды</td>
+        <td>{{td}}</td>
+    </tr>
+    <tr>
+        <td>Кредит</td>
+        <td>{{finance}}</td>
+    </tr>
+    <tr>
+        <td>От ДЦ</td>
+        <td>{{manual}}</td>
+    </tr>
+
+    <tr>
+        <td><strong>Итоговая стоимость</strong></td>
+        <td colspan="3">{{total_price}}</strong></td>
+    </tr>
+
+    <tr>
+        <td rowspan="5"><strong>Оплата</strong></td>
+        <td>Трейд ин</td>
+        <td>{{trade_value}}</td>
+        <td rowspan="5">{{total_payment}}</td>
+    </tr>
+    <tr>
+        <td>QR</td>
+        <td>{{qr_payment}}</td>
+    </tr>
+    <tr>
+        <td>Безнал</td>
+        <td>{{card_payment}}</td>
+    </tr>
+    <tr>
+        <td>Нал</td>
+        <td>{{cash}}</td>
+    </tr>
+    <tr>
+        <td>Предоплата</td>
+        <td>{{pre_order}}</td>
+    </tr>
+
+    <tr>
+        <td><strong>Кредит</strong></td>
+        <td colspan="3">{{credit_payment}}</td>
+    </tr>
+
+    <tr>
+        <td><strong>Итого</strong></td>
+        <td colspan="3">{{tatal_value}}</strong></td>
+    </tr>
+
+    <tr>
+        <td><strong>Доп оборудование</strong></td>
+        <td colspan="3">{{dop_oborud}}</td>
+    </tr>
+
+    <tr>
+        <td><strong>Клиент</strong></td>
+        <td colspan="3">{{client_name}}</td>
+    </tr>
+</table>
+
+<div class="no-print" style="text-align: center; margin-top: 20px;">
+    <button onclick="window.print()" style="padding: 8px 16px; font-size: 14px;">
+        🖨️ Распечатать / Сохранить PDF
+    </button>
+</div>
+</body>
+</html>

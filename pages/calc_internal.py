@@ -1,6 +1,11 @@
 import streamlit as st
 import sqlite3
 from pathlib import Path
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
+from report_generator import generate_report
+
 
 st.set_page_config(page_title="Калькулятор КМ", page_icon="🔧", layout="wide")
 
@@ -224,6 +229,17 @@ with col1:
                 )
         else:
             st.info("Лояльный трейд-ин не доступен для этого автомобиля")
+    
+    st.markdown('<div class="section-header">Данные</div>', unsafe_allow_html=True)
+    
+    vin = st.text_input("VIN", value="")
+    trade_value = st.number_input("Сумма трейд ин", min_value=0, step=10000, value=0)
+    pre_order = st.number_input("Предоплата", min_value=0, step=10000, value=0)
+    qr_payment = st.number_input("Оплата QR", min_value=0, step=5000, value=0)
+    card_payment = st.number_input("Оплата картой", min_value=0, step=5000, value=0)
+    cash = st.number_input("Оплата наличными", min_value=0, step=5000, value=0)
+    client_name = st.text_input("Имя клиента", value="")
+
 if st.session_state.show_col2 and col2 is not None:
     with col2:
         st.markdown('<div class="section-header">📊 Расчет КМ</div>', unsafe_allow_html=True)
@@ -491,3 +507,50 @@ with col3:
         elif st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) <= 0:
             st.success("✅ Кредит не требуется")
             st.session_state.show_credit = False
+
+
+    if st.button("📄 Сформировать расчётный лист", use_container_width=True):
+        if car_data is None:
+            st.error("Сначала выберите марку, модель, год и комплектацию")
+        else:
+            mcp = car_data['retailprice']
+            pryamaya = car_data['pryamaya']           
+            loyaltd = car_data['loyaltradein'] if is_loyaltradein else 0
+            td = car_data['tradein'] if (is_tradein and not is_loyaltradein) else 0
+            finance = car_data['finance'] if is_credit else 0
+            manual = manual_discount + pereliv  
+            total_discount = pryamaya + loyaltd + td + finance + manual
+            total_price = mcp - total_discount 
+            total_payment = trade_value + pre_order + qr_payment + card_payment + cash   
+            credit_payment = total_price - total_payment
+            total_value = 0                    
+            dop_oborud = order_price
+            
+            report_dict = {
+                "brand": brand,
+                "model": model,
+                "year": year,
+                "trim": trim,
+                "vin": vin,
+                "mcp": f"{mcp:,.0f}",
+                "pryamaya": f"{pryamaya:,.0f}",
+                "loyaltd": f"{loyaltd:,.0f}",
+                "td": f"{td:,.0f}",
+                "finance": f"{finance:,.0f}",
+                "manual": f"{manual:,.0f}",
+                "total_discount": f"{total_discount:,.0f}",
+                "total_price": f"{total_price:,.0f}",      
+                "trade_value": f"{trade_value:,.0f}",
+                "total_payment": f"{total_payment:,.0f}",
+                "qr_payment": f"{qr_payment:,.0f}",
+                "card_payment": f"{card_payment:,.0f}",
+                "cash": f"{cash:,.0f}",
+                "pre_order": f"{pre_order:,.0f}",
+                "credit_payment": f"{credit_payment:,.0f}",
+                "tatal_value": f"{total_value:,.0f}",
+                "dop_oborud": f"{dop_oborud:,.0f}",
+                "client_name": client_name,
+            }
+            html_content = generate_report(report_dict)
+            st.components.v1.html(html_content, height=900, scrolling=True)            
+           
