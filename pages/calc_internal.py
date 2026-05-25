@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 from report_generator import generate_report
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
 
