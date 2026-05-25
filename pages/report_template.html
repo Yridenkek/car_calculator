@@ -26,6 +26,8 @@
         table.iksweb, 
         table.iksweb td, 
         table.iksweb th {
+            text-align: center;
+            vertical-align: center;
             border: 1px solid #595959;
         }
 
@@ -41,6 +43,10 @@
             font-weight: normal;
         }
         @media print {
+            @page{
+                margin-top: 2cm;
+                margin-bottom: 2cm;
+            }
             body {
                 margin: 0;
                 padding: 0;

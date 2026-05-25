@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 from report_generator import generate_report
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 
 st.set_page_config(page_title="Калькулятор КМ", page_icon="🔧", layout="wide")
@@ -230,15 +232,6 @@ with col1:
         else:
             st.info("Лояльный трейд-ин не доступен для этого автомобиля")
     
-    st.markdown('<div class="section-header">Данные</div>', unsafe_allow_html=True)
-    
-    vin = st.text_input("VIN", value="")
-    trade_value = st.number_input("Сумма трейд ин", min_value=0, step=10000, value=0)
-    pre_order = st.number_input("Предоплата", min_value=0, step=10000, value=0)
-    qr_payment = st.number_input("Оплата QR", min_value=0, step=5000, value=0)
-    card_payment = st.number_input("Оплата картой", min_value=0, step=5000, value=0)
-    cash = st.number_input("Оплата наличными", min_value=0, step=5000, value=0)
-    client_name = st.text_input("Имя клиента", value="")
 
 if st.session_state.show_col2 and col2 is not None:
     with col2:
@@ -340,6 +333,16 @@ if st.session_state.show_col2 and col2 is not None:
                 st.warning("Нет данных")
         else:
             st.info("👈 Выберите автомобиль")
+
+        st.markdown('<div class="section-header">Данные</div>', unsafe_allow_html=True)
+    
+        vin = st.text_input("VIN", value="")
+        trade_value = st.number_input("Сумма трейд ин", min_value=0, step=10000, value=0)
+        pre_order = st.number_input("Предоплата", min_value=0, step=10000, value=0)
+        qr_payment = st.number_input("Оплата QR", min_value=0, step=5000, value=0)
+        card_payment = st.number_input("Оплата картой", min_value=0, step=5000, value=0)
+        cash = st.number_input("Оплата наличными", min_value=0, step=5000, value=0)
+        client_name = st.text_input("Имя клиента", value="")
 
 
 
