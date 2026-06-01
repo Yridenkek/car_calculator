@@ -205,9 +205,14 @@ with col1:
     
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
+
+
+    credit_info = st.session_state.get("credit_data", {})
+    carprice = credit_info.get("carprice", 0)
     order_price = st.number_input("Допы (заказ-наряд)", min_value=0, step=10000, value=0)
+    max_pereliv = (carprice / 5) - order_price
     manual_discount = st.number_input("Скидка от ДЦ", min_value=0, step=5000, value=0)
-    pereliv = st.number_input("Перелив в допы", min_value=0, step=10000, value=0)
+    pereliv = st.number_input(f"Перелив в допы (Максимум {0:,.0f})", min_value=0, step=10000, value=0)
 
     car_data = get_car_data(brand, model, year, trim) if brand and model and year and trim else None
 
@@ -358,10 +363,14 @@ with col3:
         carprice = credit_body - order_price - kasko - pereliv
         order_price += pereliv
         
+        st.session_state.credit_data = {
+            "carprice": carprice,
+        }
+
         st.markdown(f"""
             <div class="info-block">
                 Железо: {carprice:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Допы</span> {order_price:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Допы</span> {order_price:,.0f}  ₽<br>
                 <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
             </div>
         """, unsafe_allow_html=True)
