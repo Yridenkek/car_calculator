@@ -269,7 +269,9 @@ if st.session_state.show_col2 and col2 is not None:
                 
                 joc = dopoborud + markup + insurance_value
                 kum = joc + tradein_value
-                
+                iron = markup + pereliv
+
+
                 st.markdown(f"""
                     <div class="total-margin">
                         <div class="label">КУМ</div>
@@ -285,7 +287,7 @@ if st.session_state.show_col2 and col2 is not None:
                     st.markdown(f"""
                         <div class="accent-metric">
                             <div style="font-size:0.8rem; color:#475569;">Железо</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{markup:,.0f} ₽</div>
+                            <div style="font-size:1.2rem; font-weight:600;">{iron:,.0f} ₽</div>
                         </div>
                     """, unsafe_allow_html=True)
                     
