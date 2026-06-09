@@ -245,7 +245,7 @@ if st.session_state.show_col2 and col2 is not None:
             car_data = get_car_data(brand, model, year, trim)
             
             if car_data:
-                markup = car_data['retailprice'] - car_data['price'] - manual_discount - pereliv
+                markup = car_data['retailprice'] - car_data['price'] - manual_discount
                 if is_loyaltradein:
                     markup -= 30000
                 

@@ -1,14 +1,25 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
+st.set_page_config(
+    page_title="Склад автомобилей",
+    layout="wide"
+)
 
+SHEET_ID = "1PiF6uLm_aqvXpYToEyfF9xqPGQ8NpQPELD0FagBn50w"
+GID = "0"
 
-# Вариант 1: используем secrets.toml (рекомендуется)
-conn = st.connection("gsheets", type=GSheetsConnection)
-df = conn.read()   # теперь ошибки не будет
+url = (
+    f"https://docs.google.com/spreadsheets/d/{SHEET_ID}"
+    f"/export?format=csv&gid={GID}"
+)
 
-# Вариант 2: явно передаём ссылку (если secrets.toml не создан)
-# conn = st.connection("gsheets", type=GSheetsConnection)
-# df = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1ABC123.../edit")
+df = pd.read_csv(url)
 
-st.dataframe(df)
+st.title("Склад автомобилей")
+
+st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True
+)
