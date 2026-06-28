@@ -263,7 +263,8 @@ if st.session_state.show_col2 and col2 is not None:
                     else:
                         vozm += car_data['tradein']
                 
-                dopoborud = (order_price * 0,6) + pereliv
+                dohoddop = order_price * 0,6 
+                dopoborud = dohoddop + pereliv
                 insurance_value = 80000 if is_credit else 0
                 tradein_value = 100000 if is_tradein else 0
                 
