@@ -210,9 +210,10 @@ with col1:
     credit_info = st.session_state.get("credit_data", {})
     carprice = credit_info.get("carprice", 0)
     order_price = st.number_input("Допы (заказ-наряд)", min_value=0, step=10000, value=0)
-    max_pereliv = (carprice / 5) - order_price
     manual_discount = st.number_input("Скидка от ДЦ", min_value=0, step=5000, value=0)
+    pereliv_max = credit_info.get("pereliv_max", 0)
     pereliv = st.number_input(f"Перелив в допы (Максимум {0:,.0f})", min_value=0, step=10000, value=0)
+
 
     car_data = get_car_data(brand, model, year, trim) if brand and model and year and trim else None
 
@@ -265,12 +266,10 @@ if st.session_state.show_col2 and col2 is not None:
                 
                 dopoborud = (order_price * 0.6) + pereliv
                 insurance_value = 80000 if is_credit else 0 
-                tradein_value = 100000 if is_tradein else 0
-                
+                tradein_value = 100000 if is_tradein else 0              
                 joc = dopoborud + markup + insurance_value
                 kum = joc + tradein_value
                 iron = markup + pereliv
-
 
                 st.markdown(f"""
                     <div class="total-margin">
@@ -364,15 +363,19 @@ with col3:
         credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
         carprice = credit_body - order_price - kasko - pereliv
         order_price += pereliv
-        
+        pereliv_max = (carprice - 5 * (dopoborud + kasko)) / 5
+
         st.session_state.credit_data = {
             "carprice": carprice,
+            "pereliv_max": pereliv_max,
+
         }
 
         st.markdown(f"""
             <div class="info-block">
                 Железо: {carprice:,.0f} ₽<br>
                 <span style="font-size:0.8rem;">Допы</span> {order_price:,.0f}  ₽<br>
+                <span style="font-size:0.8rem;">Перелив макс</span> {pereliv_max:,.0f}  ₽<br>
                 <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
             </div>
         """, unsafe_allow_html=True)
