@@ -361,29 +361,49 @@ with col3:
             discount_sum += car_data['loyaltradein'] if is_loyaltradein else car_data['tradein']
         
         kasko = 130000 if brand == "Haval" else 170000
-        credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
-        carprice = credit_body - order_price - kasko - pereliv
-        order_price += pereliv
-        order_price1 = st.session_state.get("order_price", 0)
-        pereliv_max = (carprice  - 5 * (order_price1 + kasko)) / 6
+        
+        # ---- БАЗА ДЛЯ РАСЧЁТА (без перелива) ----
+        carprice_base = car_data['retailprice'] - discount_sum + order_price
+        
+        # ---- ПЕРЕСЧИТЫВАЕМ pereliv_max ТОЛЬКО ПРИ ИЗМЕНЕНИИ БАЗЫ ----
+        current_key = f"{carprice_base}_{order_price}_{kasko}"
+        
+        if ('pereliv_max_key' not in st.session_state or 
+            st.session_state.pereliv_max_key != current_key):
+            
+            # Пересчитываем максимум перелива по формуле
+            pereliv_max = (carprice_base - 5 * (order_price + kasko)) / 6
+            pereliv_max = max(0, pereliv_max)
+            
+            st.session_state.pereliv_max = pereliv_max
+            st.session_state.pereliv_max_key = current_key
+        
+        # Используем сохранённое значение
+        pereliv_max = st.session_state.get("pereliv_max", 0)
+        
+        # ---- ЖЕЛЕЗО С УЧЁТОМ ПЕРЕЛИВА ----
+        carprice = carprice_base - pereliv
+        order_price_final = order_price + pereliv
+        credit_body = max(0, carprice + order_price_final + kasko)
 
         st.session_state.credit_data = {
             "carprice": carprice,
+            "carprice_base": carprice_base,
             "pereliv_max": pereliv_max,
-
         }
 
         st.markdown(f"""
             <div class="info-block">
                 Железо: {carprice:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Допы</span> {order_price:,.0f}  ₽<br>
-                <span style="font-size:0.8rem;">Перелив макс</span> {pereliv_max:,.0f}  ₽<br>
+                <span style="font-size:0.8rem;">Допы (с переливом)</span> {order_price_final:,.0f} ₽<br>
+                <span style="font-size:0.8rem;">Перелив макс</span> {pereliv_max:,.0f} ₽<br>
                 <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
             </div>
         """, unsafe_allow_html=True)
     else:
         credit_body = 0
         carprice = 0
+        pereliv_max = 0
         st.info("👈 Выберите автомобиль для расчета кредита")
     
     if credit_body > 0 and carprice > 0:
@@ -570,5 +590,4 @@ with col3:
                 "client_name": client_name,
             }
             html_content = generate_report(report_dict)
-            st.components.v1.html(html_content, height=900, scrolling=True)            
-           
+            st.components.v1.html(html_content, height=900, scrolling=True)
