@@ -111,7 +111,7 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-# Инициализация состояния
+
 if 'show_col2' not in st.session_state:
     st.session_state.show_col2 = True
 
@@ -214,6 +214,7 @@ with col1:
     pereliv_max = credit_info.get("pereliv_max", 0)
     pereliv = st.number_input(f"Перелив в допы (Максимум {0:,.0f})", min_value=0, step=10000, value=0)
 
+    st.session_state.order_price = order_price
 
     car_data = get_car_data(brand, model, year, trim) if brand and model and year and trim else None
 
@@ -363,7 +364,8 @@ with col3:
         credit_body = max(0, car_data['retailprice'] - discount_sum + order_price + kasko)  
         carprice = credit_body - order_price - kasko - pereliv
         order_price += pereliv
-        pereliv_max = (carprice - 5 * (dopoborud + kasko)) / 5
+        order_price1 = st.session_state.get("order_price", 0)
+        pereliv_max = (carprice  - 5 * (order_price1 + kasko)) / 6
 
         st.session_state.credit_data = {
             "carprice": carprice,
