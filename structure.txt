@@ -1,0 +1,57 @@
+‘âàãªâãà  ¯ ¯®ª â®¬  Windows
+‘¥à¨©­ë© ­®¬¥à â®¬ : 8E50-3CA6
+C:.
+³   app.py
+³   hint
+³   requirements.txt
+³   structure.txt
+³   
+ÃÄÄÄ.devcontainer
+³       devcontainer.json
+³       
+ÃÄÄÄ.streamlit
+³       secrets.toml
+³       
+ÃÄÄÄdata
+³       cars.db
+³       
+ÃÄÄÄdatabase
+³   ³   db_manager.py
+³   ³   init_db.py
+³   ³   init_rates.py
+³   ³   __init__.py
+³   ³   
+³   ÀÄÄÄ__pycache__
+³           db_manager.cpython-314.pyc
+³           init_db.cpython-314.pyc
+³           init_rates.cpython-314.pyc
+³           __init__.cpython-314.pyc
+³           
+ÃÄÄÄmodules
+³   ³   calculator.py
+³   ³   credit_calc.py
+³   ³   database.py
+³   ³   warehouse.py
+³   ³   __init__.py
+³   ³   
+³   ÀÄÄÄ__pycache__
+³           calculator.cpython-314.pyc
+³           __init__.cpython-314.pyc
+³           
+ÃÄÄÄpages
+³   ³   calc_client.py
+³   ³   calc_internal.py
+³   ³   issued.py
+³   ³   price.py
+³   ³   report_generator.py
+³   ³   report_template.html
+³   ³   warehouse.py
+³   ³   __init__.py
+³   ³   
+³   ÀÄÄÄ__pycache__
+³           report_generator.cpython-314.pyc
+³           
+ÀÄÄÄ__pycache__
+        app.cpython-314.pyc
+        menu.cpython-314.pyc
+        

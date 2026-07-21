@@ -1,192 +1,19 @@
 import streamlit as st
-import sqlite3
-from pathlib import Path
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).parent))
-from report_generator import generate_report
-import pandas as pd
-
+from modules.database import (get_brands, get_models, get_years, get_trims, get_car_data)
+from modules.styles import load_styles
+from modules.constants import get_loyal_tooltip
+from modules.report import (create_report_data, generate_client_report)
+from modules.credit_ui import show_credit_calculator
+from modules.km_ui import show_km_calculator
 
 st.set_page_config(page_title="Калькулятор КМ", page_icon="🔧", layout="wide")
 
-st.markdown("""
-    <style>
-    /* Главный заголовок */
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #1E3A8A;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    
-    /* Подзаголовки секций */
-    .section-header {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #2563EB;
-        border-left: 4px solid #2563EB;
-        padding-left: 12px;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Карточка с результатом */
-    .result-card {
-        background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
-        border-radius: 12px;
-        padding: 1rem;
-        color: white;
-        text-align: center;
-        margin: 0.5rem 0;
-    }
-    
-    .result-card h3 {
-        margin: 0;
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    .result-card .value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    
-    /* Выделение итоговой маржи */
-    .total-margin {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        border-radius: 12px;
-        padding: 1rem;
-        color: white;
-        text-align: center;
-    }
-    
-    .total-margin .label {
-        font-size: 1rem;
-        margin: 0;
-    }
-    
-    .total-margin .value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin: 0;
-    }
-    
-    /* Разделители */
-    .divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #CBD5E1, transparent);
-        margin: 1rem 0;
-    }
-    
-    /* Акцентные метрики */
-    .accent-metric {
-        background: #F0F9FF;
-        border-radius: 8px;
-        padding: 0.5rem;
-        text-align: center;
-        border: 1px solid #BAE6FD;
-    }
-    
-    /* Боковая панель */
-    [data-testid="stSidebar"] {
-        background: #F8FAFC;
-    }
-    
-    /* Кнопки */
-    .stButton button {
-        border-radius: 8px;
-        font-weight: 600;
-    }
-    
-    /* Информационные блоки */
-    .info-block {
-        background: #EFF6FF;
-        border-left: 4px solid #3B82F6;
-        padding: 0.75rem;
-        border-radius: 8px;
-        margin: 0.5rem 0;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown(
+    load_styles(),
+    unsafe_allow_html=True
+)
 
-if 'show_col2' not in st.session_state:
-    st.session_state.show_col2 = True
-
-DB_PATH = Path("data/cars.db")
-
-def get_connection():
-    return sqlite3.connect(DB_PATH)
-
-def get_brands():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT brand FROM cars ORDER BY brand")
-    brands = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return brands
-
-def get_models(brand):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT model FROM cars WHERE brand = ? ORDER BY model", (brand,))
-    models = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return models
-
-def get_years(brand, model):
-    conn = get_connection()
-    cursor = conn.cursor()  
-    cursor.execute("SELECT DISTINCT year FROM cars WHERE brand = ? AND model = ? ORDER BY year DESC", (brand, model))
-    years = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return years
-
-def get_trims(brand, model, year):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT trim FROM cars WHERE brand = ? AND model = ? AND year = ? ORDER BY trim", (brand, model, year))
-    trims = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return trims
-
-def get_car_data(brand, model, year, trim):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT price, retailprice, pryamaya, finance, tradein, loyaltradein 
-        FROM cars 
-        WHERE brand = ? AND model = ? AND year = ? AND trim = ?
-    """, (brand, model, year, trim))
-    result = cursor.fetchone()
-    conn.close()
-    
-    if result:
-        return {
-            'price': result[0],
-            'retailprice': result[1],
-            'pryamaya': result[2],
-            'finance': result[3],
-            'tradein': result[4],
-            'loyaltradein': result[5]
-        }
-    return None
-
-def get_loyal_tooltip(model):
-    if model == "001":
-        return "Geely, Belgee, Knewstar, Changan, Haval, Tank, Great Wall, Chery, GAC, Omoda, Exeed, Jetour, Jaecoo, Kaiyi, Baic, Jac, Faw, Ora, Jetta, Wey, Livan, Lifan, Hongqi, Soueast, Lixiang, Skywell, Voyah, Lynk & Co, Zeekr, Aito, Avatr, BYD, Dongfeng, Oting, SWM, VGV, TENET, Nio, Denta, Foton"
-    elif model == "EX5 EM-i":
-        return "Volkswagen, Skoda, Toyota, Nissan, Renault, Hyundai, Kia, Mazda, Lexus, Volvo, Geely, Belgee, Knewstar"
-    else:
-        return "Volkswagen, Skoda, Toyota, Nissan, Renault, BMW, Mrscedes-Benz, Audi, Land Rover, Volvo, Geely, Belgee, Knewstar"
-
-if st.session_state.show_col2:
-    col1, col2, col3 = st.columns([1, 1, 2])
-else:
-    col1, col3 = st.columns([1, 2])
-    col2 = None
+col1, col2, col3 = st.columns([1, 1, 2])
 
 with col1:
     st.markdown('<div class="section-header">📋 Автомобиль</div>', unsafe_allow_html=True)
@@ -203,20 +30,49 @@ with col1:
     trims = get_trims(brand, model, year) if brand and model and year else []
     trim = st.selectbox("Комплектация", trims, key="trim")
     
+    car_data = None
+
+    if brand and model and year and trim:
+        car_data = get_car_data(
+            brand,
+            model,
+            year,
+            trim
+        )
+
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
+    if "order_price" not in st.session_state:
+        st.session_state.order_price = 0
 
+    order_price = st.number_input(
+        "Допы (заказ-наряд)",
+        min_value=0,
+        step=10000,
+        key="order_price"
+    )    
 
-    credit_info = st.session_state.get("credit_data", {})
-    carprice = credit_info.get("carprice", 0)
-    order_price = st.number_input("Допы (заказ-наряд)", min_value=0, step=10000, value=0)
-    manual_discount = st.number_input("Скидка от ДЦ", min_value=0, step=5000, value=0)
-    pereliv_max = credit_info.get("pereliv_max", 0)
-    pereliv = st.number_input(f"Перелив в допы (Максимум {0:,.0f})", min_value=0, step=10000, value=0)
+    if "manual_discount" not in st.session_state:
+        st.session_state.manual_discount = 0
 
-    st.session_state.order_price = order_price
+    manual_discount = st.number_input(
+        "Скидка от ДЦ",
+        min_value=0,
+        step=5000,
+        key="manual_discount"
+    )    
 
-    car_data = get_car_data(brand, model, year, trim) if brand and model and year and trim else None
+    pereliv_max = 0
+
+    if "pereliv" not in st.session_state:
+        st.session_state.pereliv = 0
+
+    pereliv = st.number_input(
+        f"Перелив в допы",
+        min_value=0,
+        step=10000,
+        key="pereliv"
+    )
 
     st.markdown('<div class="section-header">✅ Условия покупки</div>', unsafe_allow_html=True)
     
@@ -239,355 +95,75 @@ with col1:
             st.info("Лояльный трейд-ин не доступен для этого автомобиля")
     
 
-if st.session_state.show_col2 and col2 is not None:
-    with col2:
-        st.markdown('<div class="section-header">📊 Расчет КМ</div>', unsafe_allow_html=True)
-        
-        if brand and model and year and trim:
-            car_data = get_car_data(brand, model, year, trim)
-            
-            if car_data:
-                markup = car_data['retailprice'] - car_data['price'] - manual_discount - pereliv
-                if is_loyaltradein:
-                    markup -= 30000
-                
-                total_discount = car_data['pryamaya'] + manual_discount
-                if is_tradein:
-                    if is_loyaltradein:
-                        total_discount += car_data['loyaltradein']
-                    else:
-                        total_discount += car_data['tradein']
-                
-                vozm = car_data['pryamaya'] 
-                if is_tradein:
-                    if is_loyaltradein:
-                        vozm += car_data['loyaltradein'] - 30000
-                    else:
-                        vozm += car_data['tradein']
-                
-                dopoborud = (order_price * 0.6) + pereliv
-                insurance_value = 80000 if is_credit else 0 
-                tradein_value = 100000 if is_tradein else 0              
-                joc = dopoborud + markup + insurance_value
-                kum = joc + tradein_value
-                iron = markup + pereliv
+with col2:
 
-                st.markdown(f"""
-                    <div class="total-margin">
-                        <div class="label">КУМ</div>
-                        <div class="value">{kum:,.0f} ₽</div>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-                
-                col_m1, col_m2 = st.columns(2)
-                
-                with col_m1:
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Железо</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{iron:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Сумма скидок</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{total_discount:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">ФИН</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{insurance_value:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_m2:
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Доход допы</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{dopoborud:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Возмещение</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{vozm:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-
-                    
-                    st.markdown(f"""
-                        <div class="accent-metric">
-                            <div style="font-size:0.8rem; color:#475569;">Трейд</div>
-                            <div style="font-size:1.2rem; font-weight:600;">{tradein_value:,.0f} ₽</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                    <div class="info-block">
-                        📈 ЖОК = {joc:,.0f} ₽
-                    </div>
-                """, unsafe_allow_html=True)
-                
-            else:
-                st.warning("Нет данных")
-        else:
-            st.info("👈 Выберите автомобиль")
-
-        st.markdown('<div class="section-header">Данные</div>', unsafe_allow_html=True)
-    
-        vin = st.text_input("VIN", value="")
-        trade_value = st.number_input("Сумма трейд ин", min_value=0, step=10000, value=0)
-        pre_order = st.number_input("Предоплата", min_value=0, step=10000, value=0)
-        qr_payment = st.number_input("Оплата QR", min_value=0, step=5000, value=0)
-        card_payment = st.number_input("Оплата картой", min_value=0, step=5000, value=0)
-        cash = st.number_input("Оплата наличными", min_value=0, step=5000, value=0)
-        client_name = st.text_input("Имя клиента", value="")
-
+    km_data = show_km_calculator(
+        car_data=car_data,
+        manual_discount=manual_discount,
+        pereliv=pereliv,
+        order_price=order_price,
+        is_credit=is_credit,
+        is_tradein=is_tradein,
+        is_loyaltradein=is_loyaltradein
+    )
 
 
 with col3:
     st.markdown('<div class="section-header">💳 Кредитный калькулятор</div>', unsafe_allow_html=True)
     
-    if car_data:
-        discount_sum = car_data['pryamaya'] + manual_discount
-        if is_tradein:
-            discount_sum += car_data['loyaltradein'] if is_loyaltradein else car_data['tradein']
-        
-        kasko = 130000 if brand == "Haval" else 170000
-        
-        # ---- БАЗА ДЛЯ РАСЧЁТА (без перелива) ----
-        carprice_base = car_data['retailprice'] - discount_sum + order_price
-        
-        # ---- ПЕРЕСЧИТЫВАЕМ pereliv_max ТОЛЬКО ПРИ ИЗМЕНЕНИИ БАЗЫ ----
-        current_key = f"{carprice_base}_{order_price}_{kasko}"
-        
-        if ('pereliv_max_key' not in st.session_state or 
-            st.session_state.pereliv_max_key != current_key):
-            
-            # Пересчитываем максимум перелива по формуле
-            pereliv_max = (carprice_base - 5 * (order_price + kasko)) / 6
-            pereliv_max = max(0, pereliv_max)
-            
-            st.session_state.pereliv_max = pereliv_max
-            st.session_state.pereliv_max_key = current_key
-        
-        # Используем сохранённое значение
-        pereliv_max = st.session_state.get("pereliv_max", 0)
-        
-        # ---- ЖЕЛЕЗО С УЧЁТОМ ПЕРЕЛИВА ----
-        carprice = carprice_base - pereliv
-        order_price_final = order_price + pereliv
-        credit_body = max(0, carprice + order_price_final + kasko)
-
-        st.session_state.credit_data = {
-            "carprice": carprice,
-            "carprice_base": carprice_base,
-            "pereliv_max": pereliv_max,
-        }
-
-        st.markdown(f"""
-            <div class="info-block">
-                Железо: {carprice:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Допы (с переливом)</span> {order_price_final:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">Перелив макс</span> {pereliv_max:,.0f} ₽<br>
-                <span style="font-size:0.8rem;">КАСКО</span> {kasko:,.0f} ₽
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        credit_body = 0
-        carprice = 0
-        pereliv_max = 0
-        st.info("👈 Выберите автомобиль для расчета кредита")
-    
-    if credit_body > 0 and carprice > 0:
-        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-        
-        if 'carprice' not in st.session_state:
-            st.session_state.carprice = carprice
-        if st.session_state.carprice != carprice:
-            st.session_state.carprice = carprice
-            old_percent = st.session_state.get('down_percent', 20.0)
-            st.session_state.down_rub = int((old_percent / 100) * carprice)
-            st.session_state.down_percent = old_percent
-        
-        if 'down_rub' not in st.session_state:
-            st.session_state.down_rub = int(carprice * 0.2)
-        if 'down_percent' not in st.session_state:
-            st.session_state.down_percent = 20.0
-        
-        def sync_from_rub():
-            carprice = st.session_state.carprice
-            if carprice > 0:
-                rub = st.session_state.down_rub
-                st.session_state.down_percent = round((rub / carprice) * 100, 1)
-        
-        def sync_from_percent():
-            carprice = st.session_state.carprice
-            if carprice > 0:
-                percent = st.session_state.down_percent
-                st.session_state.down_rub = int((percent / 100) * carprice)
-        
-        col_left, col_right = st.columns([1, 2])
-        
-        with col_left:
-            st.markdown("**💵 Первоначальный взнос**")
-            
-            st.number_input(
-                "₽ Сумма",
-                min_value=0,
-                max_value=carprice,
-                step=1000,
-                key="down_rub",
-                on_change=sync_from_rub,
-                label_visibility="collapsed",
-                placeholder="Сумма в рублях"
-            )
-            
-            st.number_input(
-                "% от стоимости авто",
-                min_value=0.0,
-                max_value=100.0,
-                step=0.5,
-                key="down_percent",
-                on_change=sync_from_percent,
-                label_visibility="collapsed",
-                placeholder="Процент"
-            )
-        
-        with col_right:
-            rub_value = st.session_state.down_rub
-            loan_amount = max(0, credit_body - rub_value)
-            st.metric("🏦 Тело кредита", f"{loan_amount:,.0f} ₽")
-        
-        current_percent = st.session_state.down_percent
-        percent_rounded = (int(current_percent) // 10) * 10
-        percent_rounded = min(percent_rounded, 80)
-        
-        if 'prev_percent' not in st.session_state:
-            st.session_state.prev_percent = current_percent
-        
-        if current_percent != st.session_state.prev_percent:
-            st.session_state.prev_percent = current_percent
-            st.session_state.show_credit = False
-        
-        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-        
-        if st.button("📊 РАССЧИТАТЬ СТАВКИ И ПЛАТЕЖИ", type="primary", use_container_width=True):
-            if loan_amount > 0:
-                st.session_state.show_credit = True
-                st.session_state.saved_loan_amount = loan_amount
-                st.session_state.saved_percent_rounded = percent_rounded
-                st.session_state.saved_brand = brand
-            else:
-                st.success("✅ Кредит не требуется")
-        
-        if st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) > 0:
-            from database.db_manager import (
-                get_credit_rate_geely, 
-                get_credit_rate_haval, 
-                get_credit_rate_knewstar
-            )
-            import pandas as pd
-            
-            saved_brand = st.session_state.get('saved_brand', '')
-            
-            if saved_brand == "Geely":
-                get_credit_rate = get_credit_rate_geely
-                terms = [
-                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
-                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"),
-                    (84, "7 лет"), (96, "8 лет"),
-                ]
-            elif saved_brand == "Haval":
-                get_credit_rate = get_credit_rate_haval
-                terms = [
-                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
-                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"), (84, "7 лет"),
-                ]
-            elif saved_brand == "Knewstar":
-                get_credit_rate = get_credit_rate_knewstar
-                terms = [
-                    (12, "1 год"), (24, "2 года"), (36, "3 года"),
-                    (48, "4 года"), (60, "5 лет"), (72, "6 лет"),
-                    (84, "7 лет"), (96, "8 лет"),
-                ]
-            else:
-                get_credit_rate = None
-                terms = []
-            
-            if get_credit_rate and terms:
-                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-                st.markdown('<div class="section-header">📊 Ставки и платежи</div>', unsafe_allow_html=True)
-                
-                data = []
-                for months, label in terms:
-                    rate = get_credit_rate(st.session_state.saved_percent_rounded, months)
-                    if rate is not None and st.session_state.saved_loan_amount > 0:
-                        monthly_rate = rate / 100 / 12
-                        if monthly_rate > 0:
-                            payment = st.session_state.saved_loan_amount * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)
-                        else:
-                            payment = st.session_state.saved_loan_amount / months
-                        data.append({"Срок": label, "Ставка": f"{rate:.2f}%", "Платеж в месяц": f"{payment:,.0f} ₽"})
-                    else:
-                        data.append({"Срок": label, "Ставка": "—", "Платеж в месяц": "—"})
-                
-                df = pd.DataFrame(data)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-        
-        elif st.session_state.get('show_credit', False) and st.session_state.get('saved_loan_amount', 0) <= 0:
-            st.success("✅ Кредит не требуется")
-            st.session_state.show_credit = False
-
+    show_credit_calculator(
+        car_data=car_data,
+        brand=brand,
+        manual_discount=manual_discount,
+        is_tradein=is_tradein,
+        is_loyaltradein=is_loyaltradein,
+        order_price=order_price,
+        pereliv=pereliv
+    )
+    vin = km_data.get("vin", "")
+    trade_value = km_data.get("trade_value", 0)
+    pre_order = km_data.get("pre_order", 0)
+    qr_payment = km_data.get("qr_payment", 0)
+    card_payment = km_data.get("card_payment", 0)
+    cash = km_data.get("cash", 0)
+    client_name = km_data.get("client_name", "")
 
     if st.button("📄 Сформировать расчётный лист", use_container_width=True):
+
         if car_data is None:
-            st.error("Сначала выберите марку, модель, год и комплектацию")
+            st.error(
+                "Сначала выберите марку, модель, год и комплектацию"
+            )
+
         else:
-            mcp = car_data['retailprice']
-            pryamaya = car_data['pryamaya']           
-            loyaltd = car_data['loyaltradein'] if is_loyaltradein else 0
-            td = car_data['tradein'] if (is_tradein and not is_loyaltradein) else 0
-            finance = car_data['finance'] if is_credit else 0
-            manual = manual_discount + pereliv  
-            total_discount = pryamaya + loyaltd + td + finance + manual
-            total_price = mcp - total_discount 
-            total_payment = trade_value + pre_order + qr_payment + card_payment + cash   
-            credit_payment = total_price - total_payment
-            total_value = 0                    
-            dop_oborud = order_price
-            
-            report_dict = {
-                "brand": brand,
-                "model": model,
-                "year": year,
-                "trim": trim,
-                "vin": vin,
-                "mcp": f"{mcp:,.0f}",
-                "pryamaya": f"{pryamaya:,.0f}",
-                "loyaltd": f"{loyaltd:,.0f}",
-                "td": f"{td:,.0f}",
-                "finance": f"{finance:,.0f}",
-                "manual": f"{manual:,.0f}",
-                "total_discount": f"{total_discount:,.0f}",
-                "total_price": f"{total_price:,.0f}",      
-                "trade_value": f"{trade_value:,.0f}",
-                "total_payment": f"{total_payment:,.0f}",
-                "qr_payment": f"{qr_payment:,.0f}",
-                "card_payment": f"{card_payment:,.0f}",
-                "cash": f"{cash:,.0f}",
-                "pre_order": f"{pre_order:,.0f}",
-                "credit_payment": f"{credit_payment:,.0f}",
-                "tatal_value": f"{total_value:,.0f}",
-                "dop_oborud": f"{dop_oborud:,.0f}",
-                "client_name": client_name,
-            }
-            html_content = generate_report(report_dict)
-            st.components.v1.html(html_content, height=900, scrolling=True)
+
+            report_dict = create_report_data(
+                car_data,
+                brand,
+                model,
+                year,
+                trim,
+                vin,
+                is_loyaltradein,
+                is_tradein,
+                is_credit,
+                manual_discount,
+                pereliv,
+                trade_value,
+                pre_order,
+                qr_payment,
+                card_payment,
+                cash,
+                order_price,
+                client_name
+            )
+
+            html_content = generate_client_report(
+                report_dict
+            )
+
+            st.components.v1.html(
+                html_content,
+                height=900,
+                scrolling=True
+            )
