@@ -46,6 +46,8 @@ def create_report_data(
 
     manual = manual_discount + pereliv
 
+    order_price_final = order_price + pereliv
+
     total_discount = (
         pryamaya +
         loyaltd +
@@ -96,7 +98,7 @@ def create_report_data(
 
         "tatal_value": "0",
 
-        "dop_oborud": f"{order_price:,.0f}",
+        "dop_oborud": f"{order_price_final:,.0f}",
 
         "client_name": client_name,
     }
