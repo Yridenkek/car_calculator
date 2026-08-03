@@ -132,6 +132,62 @@ def get_credit_rate_geely(pervak, term_months):
     conn.close()
     return result[0] if result else None
 
+# ========== КРЕДИТНЫЕ СТАВКИ Geely Cityray ==========
+
+def init_rates_table_geely_cityray():
+    """Создает таблицу кредитных ставок Geely Cityray"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS credit_rates_geely_cityray (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pervak INTEGER NOT NULL,
+            rate12 REAL NOT NULL,
+            rate24 REAL NOT NULL,
+            rate36 REAL NOT NULL,
+            rate48 REAL NOT NULL,
+            rate60 REAL NOT NULL,
+            rate72 REAL NOT NULL,
+            rate84 REAL NOT NULL,
+            rate96 REAL NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def get_credit_rate_geely_cityray(pervak, term_months):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    if term_months == 12:
+        column = "rate12"
+    elif term_months == 24:
+        column = "rate24"
+    elif term_months == 36:
+        column = "rate36"
+    elif term_months == 48:
+        column = "rate48"
+    elif term_months == 60:
+        column = "rate60"
+    elif term_months == 72:
+        column = "rate72"
+    elif term_months == 84:
+        column = "rate84"
+    elif term_months == 96:
+        column = "rate96"
+    else:
+        conn.close()
+        return None
+    
+    cursor.execute(f"""
+        SELECT {column} FROM credit_rates_geely_cityray
+        WHERE pervak = ?
+    """, (pervak,))
+    
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
+
 
 # ========== КРЕДИТНЫЕ СТАВКИ HAVAL ==========
 

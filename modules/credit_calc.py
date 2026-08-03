@@ -1,14 +1,23 @@
 from database.db_manager import (
     get_credit_rate_geely,
     get_credit_rate_haval,
-    get_credit_rate_knewstar
+    get_credit_rate_knewstar,
+    get_credit_rate_geely_cityray
 )
 
 
-def get_credit_config(brand):
+def get_credit_config(brand, model=None):
+
     if brand == "Geely":
+
+        rate_func = (
+            get_credit_rate_geely_cityray
+            if model == "Cityray"
+            else get_credit_rate_geely
+        )
+
         return {
-            "rate_func": get_credit_rate_geely,
+            "rate_func": rate_func,
             "terms": [
                 (12, "1 год"),
                 (24, "2 года"),

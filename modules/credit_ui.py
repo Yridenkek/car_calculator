@@ -10,6 +10,7 @@ from modules.credit_calc import (
 def show_credit_calculator(
     car_data,
     brand,
+    model,
     manual_discount,
     is_tradein,
     is_loyaltradein,
@@ -143,15 +144,15 @@ def show_credit_calculator(
         st.session_state.loan_amount = loan_amount
         st.session_state.credit_percent = percent_rounded
         st.session_state.credit_brand = brand
-
+        st.session_state.credit_model = model
 
 
     if st.session_state.get("credit_ready"):
 
         config = get_credit_config(
-            st.session_state.credit_brand
+            st.session_state.credit_brand,
+            st.session_state.credit_model
         )
-
 
         if config:
 

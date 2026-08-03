@@ -114,6 +114,7 @@ with col3:
     show_credit_calculator(
         car_data=car_data,
         brand=brand,
+        model=model,
         manual_discount=manual_discount,
         is_tradein=is_tradein,
         is_loyaltradein=is_loyaltradein,
