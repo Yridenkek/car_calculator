@@ -2,7 +2,7 @@
 from database.db_manager import (
     init_rates_table_geely, 
     init_rates_table_haval, 
-    init_rates_table_knewstar,
+    init_rates_table_haval_kv,
     init_rates_table_geely_cityray,
     get_connection
 )
@@ -65,11 +65,39 @@ def fill_rates_geely_cityray():
     conn.close()    
 
 def fill_rates_haval():
-    """Заполняет таблицу ставок Haval"""
+    """Заполняет таблицу ставок Haval без кв"""
     conn = get_connection()
     cursor = conn.cursor()
     
     cursor.execute("DELETE FROM credit_rates_haval")
+    
+    rates_data = [
+        (0,   26.0, 26.0, 26.0, 26.0, 26.0, 26.0, 26.0),
+        (10,  26.0, 26.0, 26.0, 26.0, 11.3, 12.3, 12.8),
+        (20,  26.0, 26.0, 26.0, 26.0, 10.4, 11.3, 11.8),
+        (30,  26.0, 26.0, 26.0, 26.0, 9.10, 26.0, 11.0),
+        (40,  26.0, 26.0, 26.0, 26.0, 9.10, 26.0, 11.0),
+        (50,  26.0, 26.0, 0.01, 4.10, 5.80, 26.0, 8.40),
+        (60,  26.0, 26.0, 0.01, 0.01, 2.80, 26.0, 5.70),
+        (70,  26.0, 26.0, 0.01, 0.01, 0.01, 0.01, 1.30),
+        (80,  26.0, 26.0, 0.01, 0.01, 0.01, 0.01, 1.30),
+    ]
+    
+    for data in rates_data:
+        cursor.execute("""
+            INSERT INTO credit_rates_haval (pervak, rate12, rate24, rate36, rate48, rate60, rate72, rate84)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, data)
+    
+    conn.commit()
+    conn.close()
+
+def fill_rates_haval_kv():
+    """Заполняет таблицу ставок Haval с кв"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM credit_rates_haval_kv")
     
     rates_data = [
         (0,   25.0, 25.1, 25.2, 25.5, 25.7, 26.1, 26.7),
@@ -92,42 +120,16 @@ def fill_rates_haval():
     conn.commit()
     conn.close()
 
-def fill_rates_knewstar():
-    """Заполняет таблицу ставок Knewstar"""
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("DELETE FROM credit_rates_knewstar")
-    
-    rates_data = [
-        (0,   0.01, 12.1, 14.2, 15.5, 15.7, 16.1, 17.7, 18.0, 18.5, 19.0),
-        (10,  0.01, 12.1, 14.2, 15.5, 15.7, 16.1, 17.7, 18.0, 18.5, 19.0),
-        (20,  0.01, 10.0, 12.3, 13.1, 13.1, 13.1, 14.1, 15.0, 16.4, 16.6),
-        (30,  0.01, 8.30, 10.7, 12.3, 12.3, 12.4, 13.2, 14.3, 15.9, 16.5),
-        (40,  0.01, 6.10, 9.20, 10.9, 11.0, 11.3, 12.3, 13.4, 15.1, 15.8),
-        (50,  0.01, 4.00, 7.40, 9.60, 10.2, 10.5, 11.3, 12.6, 14.3, 14.9),
-        (60,  0.01, 0.50, 4.80, 8.20, 8.50, 9.20, 10.0, 11.0, 12.9, 13.7),
-        (70,  0.01, 0.01, 0.01, 4.50, 5.00, 6.50, 7.50, 8.50, 10.8, 11.3),
-        (80,  0.01, 0.01, 0.01, 0.01, 2.60, 4.50, 5.00, 6.50, 7.50, 8.50),
-    ]
-    
-    for data in rates_data:
-        cursor.execute("""
-            INSERT INTO credit_rates_knewstar (pervak, rate12, rate24, rate36, rate48, rate60, rate72, rate84, rate96, rate108, rate120)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, data)
-    
-    conn.commit()
-    conn.close()
+
 
 if __name__ == "__main__":
     init_rates_table_geely()
     init_rates_table_geely_cityray()
     init_rates_table_haval()
-    init_rates_table_knewstar()
+    init_rates_table_haval_kv()
     
     fill_rates_geely()
     fill_rates_geely_cityray()
     fill_rates_haval()
-    fill_rates_knewstar()
+    fill_rates_haval_kv()
     

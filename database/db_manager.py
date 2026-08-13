@@ -189,10 +189,10 @@ def get_credit_rate_geely_cityray(pervak, term_months):
     return result[0] if result else None
 
 
-# ========== КРЕДИТНЫЕ СТАВКИ HAVAL ==========
+# ========== КРЕДИТНЫЕ СТАВКИ HAVAL без кв ==========
 
 def init_rates_table_haval():
-    """Создает таблицу кредитных ставок Haval"""
+    """Создает таблицу кредитных ставок Haval без кв"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -243,14 +243,14 @@ def get_credit_rate_haval(pervak, term_months):
     return result[0] if result else None
 
 
-# ========== КРЕДИТНЫЕ СТАВКИ KNEWSTAR ==========
+# ========== КРЕДИТНЫЕ СТАВКИ Haval с кв ==========
 
-def init_rates_table_knewstar():
-    """Создает таблицу кредитных ставок Knewstar"""
+def init_rates_table_haval_kv():
+    """Создает таблицу кредитных ставок Haval с кв"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS credit_rates_knewstar (
+        CREATE TABLE IF NOT EXISTS credit_rates_haval_kv (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pervak INTEGER NOT NULL,
             rate12 REAL NOT NULL,
@@ -259,17 +259,13 @@ def init_rates_table_knewstar():
             rate48 REAL NOT NULL,
             rate60 REAL NOT NULL,
             rate72 REAL NOT NULL,
-            rate84 REAL NOT NULL,
-            rate96 REAL NOT NULL,
-            rate108 REAL NOT NULL,
-            rate120 REAL NOT NULL
-       
+            rate84 REAL NOT NULL
         )
     """)
     conn.commit()
     conn.close()
 
-def get_credit_rate_knewstar(pervak, term_months):
+def get_credit_rate_haval_kv(pervak, term_months):
     conn = get_connection()
     cursor = conn.cursor()
     
@@ -287,19 +283,12 @@ def get_credit_rate_knewstar(pervak, term_months):
         column = "rate72"
     elif term_months == 84:
         column = "rate84"
-    elif term_months == 96:
-        column = "rate96"   
-    elif term_months == 108:
-        column = "rate108"        
-    elif term_months == 120:
-        column = "rate120"        
-
     else:
         conn.close()
         return None
     
     cursor.execute(f"""
-        SELECT {column} FROM credit_rates_knewstar
+        SELECT {column} FROM credit_rates_haval_kv
         WHERE pervak = ?
     """, (pervak,))
     

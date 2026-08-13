@@ -1,7 +1,7 @@
 from database.db_manager import (
     get_credit_rate_geely,
     get_credit_rate_haval,
-    get_credit_rate_knewstar,
+    get_credit_rate_haval_kv,
     get_credit_rate_geely_cityray
 )
 
@@ -43,23 +43,6 @@ def get_credit_config(brand, model=None):
                 (84, "7 лет"),
             ]
         }
-
-    elif brand == "Knewstar":
-        return {
-            "rate_func": get_credit_rate_knewstar,
-            "terms": [
-                (12, "1 год"),
-                (24, "2 года"),
-                (36, "3 года"),
-                (48, "4 года"),
-                (60, "5 лет"),
-                (72, "6 лет"),
-                (84, "7 лет"),
-                (96, "8 лет"),
-            ]
-        }
-
-    return None
 
 
 def calculate_payment(amount, rate, months):
