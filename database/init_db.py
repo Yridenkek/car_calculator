@@ -9,17 +9,17 @@ def fill_sample_data():
     cursor.execute("DELETE FROM cars")
     
     total_cars = [
-        ("Geely", "Monjaro", 2026, "Luxury SE", 4599990, 4379990, 0, 0, 200000, 250000),
-        ("Geely", "Monjaro", 2026, "Flagship SE", 4954990, 4587300, 0, 0, 155000, 205000),
+        ("Geely", "Monjaro", 2026, "Luxury SE", 4599990, 4379990, 0, 0, 140000, 190000),
+        ("Geely", "Monjaro", 2026, "Flagship SE", 4954990, 4587300, 0, 0, 95000, 145000),
         ("Geely", "Atlas", 2026, "Luxury 2WD", 3449990, 3289990, 0, 0, 190000, 0),
         ("Geely", "Okavango", 2026, "Luxury", 3864990, 1, 0, 0, 300000, 350000),
         ("Geely", "Okavango", 2026, "Flagship", 4085990, 3795990, 0, 0, 300000, 350000),
         ("Geely", "Preface", 2026, "Luxury", 3329990, 1, 0, 0, 250000, 0),
         ("Geely", "Preface", 2026, "Flagship", 3434990, 3279990, 0, 0, 170000, 0),
-        ("Geely", "Cityray", 2026, "Comfort", 2954990, 2741300, 0, 0, 230000, 270000),
-        ("Geely", "Cityray", 2026, "Luxury", 3204990, 2991500, 0, 0, 230000, 270000),
-        ("Geely", "Cityray", 2026, "Flagship", 3344990, 3121600, 0, 0, 230000, 270000),
-        ("Geely", "Cityray", 2026, "Sport", 3384990, 3161600, 0, 0, 230000, 270000),
+        ("Geely", "Cityray", 2026, "Comfort", 2954990, 2741300, 0, 0, 280000, 320000),
+        ("Geely", "Cityray", 2026, "Luxury", 3204990, 2991500, 0, 0, 280000, 320000),
+        ("Geely", "Cityray", 2026, "Flagship", 3344990, 3121600, 0, 0, 280000, 320000),
+        ("Geely", "Cityray", 2026, "Sport", 3384990, 3161600, 0, 0, 280000, 320000),
         ("Geely", "Coolray", 2026, "Sport", 2774990, 1, 0, 0, 150000, 0),
         ("Geely", "Coolray", 2026, "Exclusive", 2964990, 2764500, 0, 0, 150000, 0),
         ("Geely", "EX5 EM-R", 2026, "Pro", 3479990, 1, 0, 0, 250000, 0),        
