@@ -25,6 +25,7 @@ def create_report_data(
     mcp = car_data['retailprice']
 
     pryamaya = car_data['pryamaya']
+    cash_discount = car_data.get('cash_discount', 0)
 
     loyaltd = (
         car_data['loyaltradein']
@@ -49,7 +50,7 @@ def create_report_data(
     order_price_final = order_price + pereliv
 
     total_discount = (
-        pryamaya +
+        pryamaya + cash_discount +
         loyaltd +
         td +
         finance +
@@ -77,6 +78,7 @@ def create_report_data(
         "vin": vin,
 
         "mcp": f"{mcp:,.0f}",
+        "cash_discount": f"{cash_discount:,.0f}",
         "pryamaya": f"{pryamaya:,.0f}",
         "loyaltd": f"{loyaltd:,.0f}",
         "td": f"{td:,.0f}",

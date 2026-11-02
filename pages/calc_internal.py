@@ -5,6 +5,7 @@ from modules.constants import get_loyal_tooltip
 from modules.report import (create_report_data, generate_client_report)
 from modules.credit_ui import show_credit_calculator
 from modules.km_ui import show_km_calculator
+from modules.purchase_conditions import apply_cash_condition
 
 st.set_page_config(page_title="Калькулятор КМ", page_icon="🔧", layout="wide")
 
@@ -78,7 +79,15 @@ with col1:
     
     is_credit = st.checkbox("💳 Кредит") 
     is_tradein = st.checkbox("🔄 Trade-in")
-    
+    is_cash = False
+    if str(model).strip().casefold() == "cityray":
+        is_cash = st.checkbox("💵 Cash", key="is_cash")
+    else:
+        st.session_state.pop("is_cash", None)
+
+    car_data = apply_cash_condition(car_data, model, is_cash)
+
+  
     is_loyaltradein = False
     if is_tradein:
         if car_data and car_data.get('loyaltradein', 0) > 0:

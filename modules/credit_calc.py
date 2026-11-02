@@ -98,7 +98,7 @@ def calculate_credit(
     order_price,
     pereliv
 ):
-    discount_sum = car_data["pryamaya"] + manual_discount
+    discount_sum = car_data["pryamaya"] + manual_discount + car_data.get("cash_discount", 0)
 
     if is_tradein:
         if is_loyaltradein:
