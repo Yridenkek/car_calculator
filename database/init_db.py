@@ -39,7 +39,7 @@ def fill_sample_data():
         ("Haval", "F7 MY26", 2026, "Premium 1,5T 2WD", 3199000, 1, 0, 0, 0, 0),
         ("Haval", "F7 MY26", 2026, "Elite 2.0T 4WD", 3399000, 1, 0, 0, 0, 0),
         ("Haval", "F7 MY26", 2026, "Premium 2.0T 4WD", 3599000, 1, 0, 0, 0, 0),
-        ("Haval", "F7 MY26", 2026, "Tech plus 2.0T 4WD", 3799000, 1, 0, 0, 0, 0),
+        ("Haval", "F7 MY26", 2026, "Tech plus 2.0T 4WD", 3799000, 3671060, 0, 0, 0, 0),
         ("Haval", "F7x", 2026, "Premium", 3599000, 1, 0, 0, 0, 0),
         ("Haval", "F7x", 2026, "Tech plus", 3799000, 1, 0, 0, 0, 0),        
         ("Haval", "F7x MY26", 2026, "Premium", 3799000, 1, 0, 0, 0, 0),
